@@ -1,0 +1,24 @@
+[tool.poetry]
+name = "anonymous-voting"
+version = "0.1.0"
+description = ""
+authors = ["MahirSalahin <mahirsalahin01@gmail.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+fastapi = "^0.115.0"
+uvicorn = {extras = ["standard"], version = "^0.30.6"}
+alembic = "^1.13.3"
+pydantic-settings = "^2.5.2"
+psycopg2-binary = "^2.9.9"
+sqlmodel = "^0.0.22"
+pytz = "^2024.2"
+python-dotenv = "^1.0.1"
+pydantic = {extras = ["email"], version = "^2.9.2"}
+pyjwt = "^2.9.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
