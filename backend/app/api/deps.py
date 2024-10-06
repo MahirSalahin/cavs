@@ -10,6 +10,7 @@ from core.db import engine
 from core.config import settings
 from core import security
 from models.common import AuthUser
+from utils.email_validator import is_valid_cuet_email
 
 
 httpBearer = HTTPBearer()
@@ -32,12 +33,18 @@ def get_current_user(session: SessionDep, token: TokenDep):
             algorithms=[security.ALGORITHM],
             audience=settings.AUDIENCE,
         )
+
+        if not is_valid_cuet_email(payload.get("email")):
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST, detail="Must be a CUET-student email")
+
         return AuthUser(
             email=payload.get("email"),
             full_name=" ".join(payload.get(
                 "user_metadata").get("full_name").split()[:2]),
             roll=payload.get("email")[1:8],
         )
+    
     except jwt.ExpiredSignatureError:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Token expired")
@@ -46,4 +53,4 @@ def get_current_user(session: SessionDep, token: TokenDep):
             status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     except Exception as e:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authentication credentials")
+            status_code=status.HTTP_401_UNAUTHORIZED, detail=f"Invalid authentication credentials. {e}")

@@ -21,7 +21,6 @@ from models.poll import (
     RollRangeCreate,
 )
 from utils.current_bst_time import current_bst_time
-from utils.email_validator import is_valid_cuet_email
 from api.deps import get_current_user
 
 
@@ -102,10 +101,6 @@ def get_public_polls(session: Session = Depends(get_session), skip: int = 0, lim
 @router.post("/create/", response_model=Message)
 def create_poll(request: PollCreate, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
     """Create a new poll."""
-    if not is_valid_cuet_email(user.email):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid CUET email address")
-
     poll = Poll(
         title=request.title,
         description=request.description,
