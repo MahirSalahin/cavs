@@ -14,7 +14,7 @@ export default function SupabaseLogin() {
             <Card className='!w-full'>
                 <CardHeader>
                     <AnimatedText text='CAVS' />
-                    <CardTitle className='text-xl text-center'>Welcome please join to continue</CardTitle>
+                    <CardTitle className='text-xl text-center'>Welcome, please join to continue</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <form
@@ -22,7 +22,7 @@ export default function SupabaseLogin() {
                     >
                         <Button type="submit" className='w-full space-x-2'>
                             <FcGoogle size={20} />
-                            <span>Login with Google</span>
+                            <span>Login with CUET email</span>
                         </Button>
                     </form>
                 </CardContent>
