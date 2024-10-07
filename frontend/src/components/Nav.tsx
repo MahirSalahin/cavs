@@ -3,6 +3,7 @@ import React from 'react'
 import { LinkButton } from './ui/linkButton'
 import { getUser, signout } from '@/lib/auth-actions'
 import { Button } from './ui/button'
+import AnimatedText from './AnimatedText'
 
 export default async function Nav() {
     const user = await getUser()
@@ -10,7 +11,7 @@ export default async function Nav() {
     return (
         <div className="sticky left-0 top-0 z-50 w-full overflow-auto bg-background/30 backdrop-blur-[12px] h-[60px] flex justify-center items-center border-b">
             <nav className="flex justify-between items-center container">
-                <Link className="text-md flex items-center" href="/">CAVS UI</Link>
+                <Link className="text-md flex items-center" href="/"><AnimatedText text='CAVS' text_size='text-[36px]'/></Link>
                 <div className='flex items-center justify-center gap-6'>
                     {
                         user ? <>

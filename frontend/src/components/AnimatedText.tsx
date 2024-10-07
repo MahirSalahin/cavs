@@ -1,9 +1,9 @@
 import React from 'react'
 import { cn } from "@/lib/utils"
 
-const AnimatedText = ({ text }: { text: string }) => {
+const AnimatedText = ({ text, text_size = '' }: { text: string, text_size?: string }) => {
     return (
-        <h1 className="text-center text-[86px] font-[500] leading-[96px] tracking-tight">
+        <h1 className={`text-center ${text_size} font-[500] leading-[96px] tracking-tight`}>
             {text.split('').map((char, index) => (
                 <span
                     key={index}
