@@ -47,6 +47,10 @@ class PollCreate(BaseModel):
     end_time: datetime
 
 
+class PollCreateResponse(BaseModel):
+    poll_id: UUID
+
+
 class PollPublic(BaseModel):
     id: UUID
     title: str

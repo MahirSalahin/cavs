@@ -8,6 +8,7 @@ from models.common import Message
 from models.poll import (
     Poll,
     PollCreate,
+    PollCreateResponse,
     PollOption,
     PollOptions,
     PollOptionsCreate,
@@ -241,7 +242,7 @@ def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
     return PollsPublic(data=data, count=len(polls))
 
 
-@router.post("/create/", response_model=Message)
+@router.post("/create/", response_model=PollCreateResponse)
 def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     """Create a new poll."""
     poll = Poll(
@@ -256,8 +257,7 @@ def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     session.add(poll)
     session.commit()
     session.refresh(poll)
-
-    return Message(message="Poll created successfully")
+    return PollCreateResponse(poll_id=poll.id)
 
 
 @router.get("/{poll_id}/", response_model=PollPublic)
