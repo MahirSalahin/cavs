@@ -44,7 +44,7 @@ def serialize_poll_public(poll):
 
 
 @router.get("/", response_model=PollsPublic)
-def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls."""
 
     query = (
@@ -65,13 +65,17 @@ def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int 
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/public", response_model=PollsPublic)
-def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20):
+def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls."""
     query = (
         select(Poll)
@@ -83,13 +87,17 @@ def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20):
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/my-polls", response_model=PollsPublic)
-def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls created by the user."""
     query = (
         select(Poll)
@@ -101,13 +109,17 @@ def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: i
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/allowed-polls", response_model=PollsPublic)
-def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls allowed for the user."""
     query = (
         select(Poll)
@@ -125,13 +137,17 @@ def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/popular-polls", response_model=PollsPublic)
-def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all popular polls."""
     query = (
         select(Poll)
@@ -153,13 +169,17 @@ def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/upcoming-polls", response_model=PollsPublic)
-def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all upcoming polls."""
     query = (
         select(Poll)
@@ -181,13 +201,17 @@ def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, li
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/ended-polls", response_model=PollsPublic)
-def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all ended polls."""
     query = (
         select(Poll)
@@ -209,13 +233,17 @@ def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/popular-polls", response_model=PollsPublic)
-def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all popular polls."""
     query = (
         select(Poll)
@@ -237,6 +265,10 @@ def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
         .offset(skip)
         .limit(limit)
     )
+    if search:
+        search = f"%{search}%"
+        query = query.where(or_(Poll.title.ilike(search),
+                            Poll.description.ilike(search)))
     polls = session.exec(query).unique().all()
     data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
