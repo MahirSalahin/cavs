@@ -10,7 +10,7 @@ from models.poll import (
     PollCreate,
     PollOption,
     PollOptions,
-    PollOptionCreate,
+    PollOptionsCreate,
     PollPublic,
     PollsPublic,
     PollOptionResult,
@@ -322,8 +322,8 @@ def get_roll_ranges(poll_id: UUID, user: CurrentUser, session: SessionDep):
 
 
 @router.post("/{poll_id}/options/", response_model=Message)
-def create_poll_option(poll_id: UUID, request: PollOptionCreate, user: CurrentUser, session: SessionDep):
-    """Create a new poll option of a poll with poll_id."""
+def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentUser, session: SessionDep):
+    """Create new poll options of a poll with poll_id."""
     poll = session.get(Poll, poll_id)
 
     if not poll:
@@ -334,25 +334,23 @@ def create_poll_option(poll_id: UUID, request: PollOptionCreate, user: CurrentUs
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to add options to this poll")
 
-    already_exists = session.exec(
-        select(PollOption)
-        .where(
-            PollOption.poll_id == poll_id,
-            PollOption.option_text == request.option_text
-        )).first()
-    if already_exists:
+    option_texts = request.option_texts
+    if len(option_texts) == 0:
         raise HTTPException(
-            status_code=400, detail=f"Option `{request.option_text}` already exists in the poll")
+            status_code=400, detail="At least one option is required")
+    if len(option_texts) + len(poll.options) > 20:
+        raise HTTPException(
+            status_code=400, detail="A poll can have at most 10 options")
+    if len(option_texts) + len(poll.options) != len(set(option_texts + [option.option_text for option in poll.options])):
+        raise HTTPException(
+            status_code=400, detail="Options must be unique")
 
-    poll_option = PollOption(
-        poll_id=poll_id,
-        option_text=request.option_text
-    )
-
-    session.add(poll_option)
+    options = [PollOption(poll_id=poll_id, option_text=option_text)
+               for option_text in option_texts]
+    session.bulk_save_objects(options)
     session.commit()
-    session.refresh(poll_option)
-
+    for option in options:
+        session.refresh(option)
     return Message(message="Option added successfully")
 
 

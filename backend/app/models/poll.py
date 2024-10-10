@@ -80,8 +80,8 @@ class PollOptions(BaseModel):
     count: int
 
 
-class PollOptionCreate(BaseModel):
-    option_text: str
+class PollOptionsCreate(BaseModel):
+    option_texts: list[str]
 
 
 class PollOptionResult(BaseModel):
