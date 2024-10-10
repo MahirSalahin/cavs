@@ -57,8 +57,9 @@ class PollPublic(BaseModel):
     created_at: datetime
     start_time: datetime
     end_time: datetime
-    options: list["PollOption"]
     roll_ranges: list[RollRange]
+    options: list["PollOption"]
+    total_votes: int
 
 
 class PollsPublic(BaseModel):

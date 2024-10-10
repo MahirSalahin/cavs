@@ -1,11 +1,10 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlmodel import Session, select, func
+from fastapi import APIRouter, HTTPException, status
+from sqlmodel import select, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql import or_, and_
 from uuid import UUID
 
-from core.db import get_session
-from models.common import AuthUser, Message
+from models.common import Message
 from models.poll import (
     Poll,
     PollCreate,
@@ -21,14 +20,30 @@ from models.poll import (
     RollRangeCreate,
 )
 from utils.current_bst_time import current_bst_time
-from api.deps import get_current_user
+from api.deps import SessionDep, CurrentUser
 
 
 router = APIRouter()
 
 
+def serialize_poll_public(poll):
+    return PollPublic(
+        id=poll.id,
+        title=poll.title,
+        description=poll.description,
+        is_private=poll.is_private,
+        creator_email=poll.creator_email,
+        created_at=poll.created_at,
+        start_time=poll.start_time,
+        end_time=poll.end_time,
+        options=poll.options,
+        total_votes=sum(option.votes for option in poll.options),
+        roll_ranges=poll.roll_ranges
+    )
+
+
 @router.get("/", response_model=PollsPublic)
-def get_polls(user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session), skip: int = 0, limit: int = 20):
+def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
     """Get all polls."""
 
     query = (
@@ -45,30 +60,17 @@ def get_polls(user: AuthUser = Depends(get_current_user), session: Session = Dep
             joinedload(Poll.options),
             joinedload(Poll.roll_ranges)
         )
+        .order_by(Poll.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
     polls = session.exec(query).unique().all()
-    data = [
-        PollPublic(
-            id=poll.id,
-            title=poll.title,
-            description=poll.description,
-            is_private=poll.is_private,
-            creator_email=poll.creator_email,
-            created_at=poll.created_at,
-            start_time=poll.start_time,
-            end_time=poll.end_time,
-            options=poll.options,
-            roll_ranges=poll.roll_ranges
-        )
-        for poll in polls
-    ]
+    data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/public", response_model=PollsPublic)
-def get_public_polls(session: Session = Depends(get_session), skip: int = 0, limit: int = 20):
+def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20):
     """Get all polls."""
     query = (
         select(Poll)
@@ -81,25 +83,166 @@ def get_public_polls(session: Session = Depends(get_session), skip: int = 0, lim
         .limit(limit)
     )
     polls = session.exec(query).unique().all()
-    data = []
-    for poll in polls:
-        data.append(PollPublic(
-            id=poll.id,
-            title=poll.title,
-            description=poll.description,
-            is_private=poll.is_private,
-            creator_email=poll.creator_email,
-            created_at=poll.created_at,
-            start_time=poll.start_time,
-            end_time=poll.end_time,
-            options=poll.options,
-            roll_ranges=poll.roll_ranges
-        ))
+    data = [serialize_poll_public(poll) for poll in polls]
+    return PollsPublic(data=data, count=len(polls))
+
+
+@router.get("/my-polls", response_model=PollsPublic)
+def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+    """Get all polls created by the user."""
+    query = (
+        select(Poll)
+        .where(Poll.creator_email == user.email)
+        .options(
+            joinedload(Poll.options),
+            joinedload(Poll.roll_ranges)
+        )
+        .offset(skip)
+        .limit(limit)
+    )
+    polls = session.exec(query).unique().all()
+    data = [serialize_poll_public(poll) for poll in polls]
+    return PollsPublic(data=data, count=len(polls))
+
+
+@router.get("/allowed-polls", response_model=PollsPublic)
+def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+    """Get all polls allowed for the user."""
+    query = (
+        select(Poll)
+        .where(
+            or_(
+                Poll.creator_email == user.email,
+                Poll.roll_ranges.any(
+                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
+            )
+        )
+        .options(
+            joinedload(Poll.options),
+            joinedload(Poll.roll_ranges)
+        )
+        .offset(skip)
+        .limit(limit)
+    )
+    polls = session.exec(query).unique().all()
+    data = [serialize_poll_public(poll) for poll in polls]
+    return PollsPublic(data=data, count=len(polls))
+
+
+@router.get("/popular-polls", response_model=PollsPublic)
+def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+    """Get all popular polls."""
+    query = (
+        select(Poll)
+        .outerjoin(PollOption, PollOption.poll_id == Poll.id)
+        .where(
+            or_(
+                Poll.is_private.is_(False),
+                Poll.creator_email == user.email,
+                Poll.roll_ranges.any(
+                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
+            )
+        )
+        .options(
+            joinedload(Poll.options),
+            joinedload(Poll.roll_ranges)
+        )
+        .group_by(Poll.id)
+        .order_by(func.sum(PollOption.votes).desc() if PollOption.votes is not None else 0)
+        .offset(skip)
+        .limit(limit)
+    )
+    polls = session.exec(query).unique().all()
+    data = [serialize_poll_public(poll) for poll in polls]
+    return PollsPublic(data=data, count=len(polls))
+
+
+@router.get("/upcoming-polls", response_model=PollsPublic)
+def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+    """Get all upcoming polls."""
+    query = (
+        select(Poll)
+        .where(
+            and_(
+                Poll.start_time > current_bst_time(),
+                or_(
+                    Poll.is_private.is_(False),
+                    Poll.creator_email == user.email,
+                    Poll.roll_ranges.any(
+                        and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
+                )
+            )
+        )
+        .options(
+            joinedload(Poll.options),
+            joinedload(Poll.roll_ranges)
+        )
+        .offset(skip)
+        .limit(limit)
+    )
+    polls = session.exec(query).unique().all()
+    data = [serialize_poll_public(poll) for poll in polls]
+    return PollsPublic(data=data, count=len(polls))
+
+
+@router.get("/ended-polls", response_model=PollsPublic)
+def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+    """Get all ended polls."""
+    query = (
+        select(Poll)
+        .where(
+            and_(
+                Poll.end_time < current_bst_time(),
+                or_(
+                    Poll.is_private.is_(False),
+                    Poll.creator_email == user.email,
+                    Poll.roll_ranges.any(
+                        and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
+                )
+            )
+        )
+        .options(
+            joinedload(Poll.options),
+            joinedload(Poll.roll_ranges)
+        )
+        .offset(skip)
+        .limit(limit)
+    )
+    polls = session.exec(query).unique().all()
+    data = [serialize_poll_public(poll) for poll in polls]
+    return PollsPublic(data=data, count=len(polls))
+
+
+@router.get("/popular-polls", response_model=PollsPublic)
+def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20):
+    """Get all popular polls."""
+    query = (
+        select(Poll)
+        .where(
+            or_(
+                Poll.is_private.is_(False),
+                Poll.creator_email == user.email,
+                Poll.roll_ranges.any(
+                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
+            )
+        )
+        .options(
+            joinedload(Poll.options),
+            joinedload(Poll.roll_ranges)
+        )
+        .join(PollOption, PollOption.poll_id == Poll.id)
+        .group_by(Poll.id)
+        .order_by(func.sum(PollOption.votes).desc())
+        .offset(skip)
+        .limit(limit)
+    )
+    polls = session.exec(query).unique().all()
+    data = [serialize_poll_public(poll) for poll in polls]
     return PollsPublic(data=data, count=len(polls))
 
 
 @router.post("/create/", response_model=Message)
-def create_poll(request: PollCreate, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     """Create a new poll."""
     poll = Poll(
         title=request.title,
@@ -118,7 +261,7 @@ def create_poll(request: PollCreate, user: AuthUser = Depends(get_current_user),
 
 
 @router.get("/{poll_id}/", response_model=PollPublic)
-def get_poll(poll_id: UUID, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get a poll by its ID."""
     poll = session.get(Poll, poll_id)
     if not poll:
@@ -128,28 +271,12 @@ def get_poll(poll_id: UUID, user: AuthUser = Depends(get_current_user), session:
     if poll.is_private and poll.creator_email != user.email and not any(roll_range.start <= user.roll <= roll_range.end for roll_range in poll.roll_ranges):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
-    options = session.exec(select(PollOption).where(
-        PollOption.poll_id == poll_id)).all()
 
-    roll_ranges = session.exec(select(RollRange).where(
-        RollRange.poll_id == poll_id)).all()
-
-    return PollPublic(
-        id=poll.id,
-        title=poll.title,
-        description=poll.description,
-        is_private=poll.is_private,
-        creator_email=poll.creator_email,
-        created_at=poll.created_at,
-        start_time=poll.start_time,
-        end_time=poll.end_time,
-        options=options,
-        roll_ranges=roll_ranges
-    )
+    return serialize_poll_public(poll)
 
 
 @router.delete("/{poll_id}/", response_model=Message)
-def delete_poll(poll_id: UUID, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def delete_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Delete a poll by its ID."""
     poll = session.get(Poll, poll_id)
     if not poll:
@@ -165,7 +292,7 @@ def delete_poll(poll_id: UUID, user: AuthUser = Depends(get_current_user), sessi
 
 
 @router.get("/{poll_id}/options/", response_model=PollOptions)
-def get_poll_options(poll_id: UUID, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_poll_options(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get all options of a poll by its ID."""
     poll = session.get(Poll, poll_id)
     if not poll:
@@ -176,13 +303,11 @@ def get_poll_options(poll_id: UUID, user: AuthUser = Depends(get_current_user), 
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
 
-    options = session.exec(select(PollOption).where(
-        PollOption.poll_id == poll_id)).all()
-    return PollOptions(data=options, count=len(options))
+    return PollOptions(data=poll.options, count=len(poll.options))
 
 
 @router.get("/{poll_id}/roll-ranges/", response_model=RollRanges)
-def get_roll_ranges(poll_id: UUID, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_roll_ranges(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get all roll ranges of a poll by its ID."""
     poll = session.get(Poll, poll_id)
     if not poll:
@@ -193,13 +318,11 @@ def get_roll_ranges(poll_id: UUID, user: AuthUser = Depends(get_current_user), s
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
 
-    roll_ranges = session.exec(select(RollRange).where(
-        RollRange.poll_id == poll_id)).all()
-    return RollRanges(data=roll_ranges, count=len(roll_ranges))
+    return RollRanges(data=poll.roll_ranges, count=len(poll.roll_ranges))
 
 
 @router.post("/{poll_id}/options/", response_model=Message)
-def create_poll_option(poll_id: UUID, request: PollOptionCreate, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def create_poll_option(poll_id: UUID, request: PollOptionCreate, user: CurrentUser, session: SessionDep):
     """Create a new poll option of a poll with poll_id."""
     poll = session.get(Poll, poll_id)
 
@@ -234,7 +357,7 @@ def create_poll_option(poll_id: UUID, request: PollOptionCreate, user: AuthUser 
 
 
 @router.post("/{poll_id}/roll-ranges", response_model=Message)
-def add_allowed_voters(poll_id: UUID, request: RollRangeCreate, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def add_allowed_voters(poll_id: UUID, request: RollRangeCreate, user: CurrentUser, session: SessionDep):
     poll = session.get(Poll, poll_id)
 
     if not poll:
@@ -261,7 +384,7 @@ def add_allowed_voters(poll_id: UUID, request: RollRangeCreate, user: AuthUser =
 
 
 @router.get("/{poll_id}/result", response_model=PollResult)
-def get_poll_result(poll_id: UUID, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_poll_result(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get the result of a poll."""
     poll = session.exec(
         select(Poll)
@@ -294,9 +417,12 @@ def get_poll_result(poll_id: UUID, user: AuthUser = Depends(get_current_user), s
 
 
 @router.get("/{poll_id}/total-votes")
-def get_total_votes(poll_id: UUID, user: AuthUser = Depends(get_current_user), session: Session = Depends(get_session)):
+def get_total_votes(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get the total number of votes of a poll."""
     poll = session.get(Poll, poll_id)
+    if not poll:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
     if poll.is_private and poll.creator_email != user.email and not any(roll_range.start <= user.roll <= roll_range.end for roll_range in poll.roll_ranges):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
