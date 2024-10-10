@@ -20,9 +20,8 @@ class RollRanges(BaseModel):
     count: int
 
 
-class RollRangeCreate(BaseModel):
-    start: int | None = Field(default=1901001)
-    end: int | None = Field(default=2313180)
+class RollRangesCreate(BaseModel):
+    roll_ranges: list[tuple[int, int]]
 
 
 class Poll(SQLModel, table=True):

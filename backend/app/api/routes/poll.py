@@ -17,7 +17,7 @@ from models.poll import (
     PollResult,
     RollRange,
     RollRanges,
-    RollRangeCreate,
+    RollRangesCreate,
 )
 from utils.current_bst_time import current_bst_time
 from api.deps import SessionDep, CurrentUser
@@ -340,14 +340,14 @@ def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentU
             status_code=400, detail="At least one option is required")
     if len(option_texts) + len(poll.options) > 20:
         raise HTTPException(
-            status_code=400, detail="A poll can have at most 10 options")
+            status_code=400, detail="A poll can have at most 20 options")
     if len(option_texts) + len(poll.options) != len(set(option_texts + [option.option_text for option in poll.options])):
         raise HTTPException(
             status_code=400, detail="Options must be unique")
 
     options = [PollOption(poll_id=poll_id, option_text=option_text)
                for option_text in option_texts]
-    session.bulk_save_objects(options)
+    session.add_all(options)
     session.commit()
     for option in options:
         session.refresh(option)
@@ -355,30 +355,35 @@ def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentU
 
 
 @router.post("/{poll_id}/roll-ranges", response_model=Message)
-def add_allowed_voters(poll_id: UUID, request: RollRangeCreate, user: CurrentUser, session: SessionDep):
+def add_allowed_voters(poll_id: UUID, request: RollRangesCreate, user: CurrentUser, session: SessionDep):
     poll = session.get(Poll, poll_id)
-
     if not poll:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
     if poll.creator_email != user.email:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to add roll ranges to this poll")
-    if request.start > request.end:
+
+    roll_ranges = request.roll_ranges
+    if len(roll_ranges) == 0:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid input")
+            status_code=400, detail="At least one roll range is required")
+    if len(roll_ranges) + len(poll.roll_ranges) > 20:
+        raise HTTPException(
+            status_code=400, detail="A poll can have at most 20 roll ranges")
+    if len(roll_ranges) + len(poll.roll_ranges) != len(set(roll_ranges + [(roll_range.start, roll_range.end)
+                                                                          for roll_range in poll.roll_ranges])):
+        raise HTTPException(
+            status_code=400, detail="Roll ranges must be unique")
 
-    poll_data = RollRange(
-        poll_id=poll_id,
-        start=request.start,
-        end=request.end,
-    )
-
-    session.add(poll_data)
+    roll_ranges = [RollRange(poll_id=poll_id, start=start, end=end)
+                   for start, end in roll_ranges]
+    session.add_all(roll_ranges)
     session.commit()
-    session.refresh(poll_data)
+    for roll_range in roll_ranges:
+        session.refresh(roll_range)
 
-    return Message(message="Roll range added successfully")
+    return Message(message="Roll ranges added successfully")
 
 
 @router.get("/{poll_id}/result", response_model=PollResult)

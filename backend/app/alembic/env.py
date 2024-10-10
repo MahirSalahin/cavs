@@ -9,7 +9,7 @@ from sqlmodel import SQLModel
 
 from alembic import context
 
-from models import Poll, PollOption, Vote
+from models import Poll, PollOption, Vote, RollRange
 
 load_dotenv()
 # this is the Alembic Config object, which provides
