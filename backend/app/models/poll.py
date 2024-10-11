@@ -3,8 +3,13 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
+from typing import TYPE_CHECKING
 
 from utils.current_bst_time import current_bst_time
+
+
+if TYPE_CHECKING:
+    from models.vote import Vote
 
 
 class RollRange(SQLModel, table=True):
@@ -75,7 +80,9 @@ class PollOption(SQLModel, table=True):
     poll_id: UUID = Field(foreign_key="poll.id", ondelete="CASCADE")
     option_text: str = Field(max_length=255)
     poll: Poll = Relationship(back_populates="options")
-    votes: int = Field(default=0)
+    votes: list["Vote"] = Relationship(
+        back_populates="poll_option", cascade_delete=True)
+    total_votes: int = Field(default=0)
 
 
 class PollOptions(BaseModel):

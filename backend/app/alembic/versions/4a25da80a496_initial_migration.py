@@ -1,8 +1,8 @@
 """initial migration
 
-Revision ID: 6df50db9d847
+Revision ID: 4a25da80a496
 Revises: 
-Create Date: 2024-10-03 21:59:43.567246
+Create Date: 2024-10-11 16:31:22.565721
 
 """
 from typing import Sequence, Union
@@ -13,7 +13,7 @@ import sqlmodel
 
 
 # revision identifiers, used by Alembic.
-revision: str = '6df50db9d847'
+revision: str = '4a25da80a496'
 down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
@@ -25,6 +25,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('title', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
     sa.Column('description', sqlmodel.sql.sqltypes.AutoString(length=1024), nullable=False),
+    sa.Column('is_private', sa.Boolean(), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('creator_email', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
     sa.Column('start_time', sa.DateTime(), nullable=False),
@@ -35,7 +36,7 @@ def upgrade() -> None:
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('poll_id', sa.Uuid(), nullable=False),
     sa.Column('option_text', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
-    sa.Column('votes', sa.Integer(), nullable=False),
+    sa.Column('total_votes', sa.Integer(), nullable=False),
     sa.ForeignKeyConstraint(['poll_id'], ['poll.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
@@ -50,9 +51,9 @@ def upgrade() -> None:
     op.create_table('vote',
     sa.Column('id', sa.Uuid(), nullable=False),
     sa.Column('option_id', sa.Uuid(), nullable=False),
-    sa.Column('voter_email', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
+    sa.Column('voter_email_hash', sqlmodel.sql.sqltypes.AutoString(length=255), nullable=False),
     sa.Column('timestamp', sa.DateTime(), nullable=False),
-    sa.ForeignKeyConstraint(['option_id'], ['polloption.id'], ),
+    sa.ForeignKeyConstraint(['option_id'], ['polloption.id'], ondelete='CASCADE'),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_vote_id'), 'vote', ['id'], unique=False)

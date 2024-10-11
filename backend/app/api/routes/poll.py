@@ -38,7 +38,7 @@ def serialize_poll_public(poll):
         start_time=poll.start_time,
         end_time=poll.end_time,
         options=poll.options,
-        total_votes=sum(option.votes for option in poll.options),
+        total_votes=sum(option.total_votes for option in poll.options),
         roll_ranges=poll.roll_ranges
     )
 
@@ -168,7 +168,7 @@ def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
             joinedload(Poll.roll_ranges)
         )
         .group_by(Poll.id)
-        .order_by(func.sum(PollOption.votes).desc() if PollOption.votes is not None else 0)
+        .order_by(func.sum(PollOption.total_votes).desc() if PollOption.total_votes is not None else 0)
         .offset(skip)
         .limit(limit)
     )
@@ -356,7 +356,7 @@ def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentU
     session.commit()
     for option in options:
         session.refresh(option)
-    return Message(message="Option added successfully")
+    return Message(message="Options added successfully")
 
 
 @router.post("/{poll_id}/roll-ranges", response_model=Message)
@@ -413,7 +413,7 @@ def get_poll_result(poll_id: UUID, user: CurrentUser, session: SessionDep):
             status_code=status.HTTP_400_BAD_REQUEST, detail="Poll has not ended yet")
 
     total_votes = session.exec(
-        select(func.sum(PollOption.votes))
+        select(func.sum(PollOption.total_votes))
         .where(PollOption.poll_id == poll_id)
     ).one_or_none() or 0
 
@@ -436,7 +436,7 @@ def get_total_votes(poll_id: UUID, user: CurrentUser, session: SessionDep):
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
 
     total_votes = session.exec(
-        select(func.sum(PollOption.votes))
+        select(func.sum(PollOption.total_votes))
         .where(PollOption.poll_id == poll_id)
     ).one_or_none() or 0
     return {"total_votes": total_votes}
