@@ -15,7 +15,7 @@ if TYPE_CHECKING:
 class Vote(SQLModel, table=True):
     id: UUID = Field(
         default_factory=uuid4, primary_key=True, index=True)
-    option_id: UUID = Field(foreign_key="polloption.id", ondelete="CASCADE")
+    option_id: UUID = Field(foreign_key="polloption.id", ondelete="CASCADE", index=True)
     voter_email_hash: str = Field(max_length=255)
     timestamp: datetime = Field(default_factory=current_bst_time)
     poll_option: "PollOption" = Relationship(back_populates="votes")

@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select, func
-from sqlalchemy.orm import joinedload
+from sqlmodel import select, func, outerjoin
+from sqlalchemy.orm import joinedload, subqueryload
 from sqlalchemy.sql import or_, and_
 from uuid import UUID
 
@@ -20,6 +20,7 @@ from models.poll import (
     RollRanges,
     RollRangesCreate,
 )
+from models.vote import Vote
 from utils.current_bst_time import current_bst_time
 from api.deps import SessionDep, CurrentUser
 
@@ -27,7 +28,7 @@ from api.deps import SessionDep, CurrentUser
 router = APIRouter()
 
 
-def serialize_poll_public(poll):
+def _serialize_poll_public(poll, total_votes) -> PollPublic:
     return PollPublic(
         id=poll.id,
         title=poll.title,
@@ -38,216 +39,177 @@ def serialize_poll_public(poll):
         start_time=poll.start_time,
         end_time=poll.end_time,
         options=poll.options,
-        total_votes=sum(option.total_votes for option in poll.options),
+        total_votes=total_votes,
         roll_ranges=poll.roll_ranges
     )
+
+
+def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause=None) -> PollsPublic:
+    vote_count_subquery = (
+        select(PollOption.poll_id, func.count(Vote.id).label('total_votes'))
+        .join(Vote, Vote.option_id == PollOption.id, isouter=True)
+        .group_by(PollOption.poll_id)
+        .subquery()
+    )
+    query = (
+        select(Poll, vote_count_subquery.c.total_votes)
+        .join(vote_count_subquery, vote_count_subquery.c.poll_id == Poll.id, isouter=True)
+        .where(where_clause)
+        .options(
+            subqueryload(Poll.options),
+            subqueryload(Poll.roll_ranges)
+        )
+        .order_by(func.coalesce(vote_count_subquery.c.total_votes, 0).desc() if order_by_clause is None else order_by_clause)
+        .offset(skip)
+        .limit(limit)
+    )
+    if search:
+        search = f"%{search}%"
+        query = query.where(
+            or_(Poll.title.ilike(search), Poll.description.ilike(search))
+        )
+
+    polls = session.exec(query).unique().all()
+    data = [_serialize_poll_public(poll, total_votes or 0)
+            for poll, total_votes in polls]
+    return PollsPublic(data=data, count=len(polls))
 
 
 @router.get("/", response_model=PollsPublic)
 def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls."""
-
-    query = (
-        select(Poll)
-        .where(
-            or_(
-                Poll.is_private.is_(False),
-                Poll.creator_email == user.email,
-                Poll.roll_ranges.any(
-                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
-            )
-        )
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .order_by(Poll.created_at.desc())
-        .offset(skip)
-        .limit(limit)
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=or_(
+            Poll.is_private.is_(False),
+            Poll.creator_email == user.email,
+            Poll.roll_ranges.any(
+                and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
+            ),
+        ),
+        order_by_clause=Poll.created_at.desc()
     )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
+    return polls
 
 
 @router.get("/public", response_model=PollsPublic)
 def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
-    """Get all polls."""
-    query = (
-        select(Poll)
-        .where(Poll.is_private.is_(False))
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .order_by(Poll.start_time.desc())
-        .offset(skip)
-        .limit(limit)
+    """Get all public polls."""
+    polls = _get_polls(
+        user=None,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=Poll.is_private.is_(False),
+        order_by_clause=Poll.created_at.desc()
     )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
+    return polls
 
 
 @router.get("/my-polls", response_model=PollsPublic)
 def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls created by the user."""
-    query = (
-        select(Poll)
-        .where(Poll.creator_email == user.email)
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .order_by(Poll.created_at.desc())
-        .offset(skip)
-        .limit(limit)
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=Poll.creator_email == user.email,
+        order_by_clause=Poll.created_at.desc()
     )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
+    return polls
 
 
 @router.get("/allowed-polls", response_model=PollsPublic)
 def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls allowed for the user."""
-    query = (
-        select(Poll)
-        .where(
-            or_(
-                Poll.creator_email == user.email,
-                Poll.roll_ranges.any(
-                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
-            )
-        )
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .order_by(Poll.created_at.desc())
-        .offset(skip)
-        .limit(limit)
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=Poll.roll_ranges.any(
+            and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
+        ),
+        order_by_clause=Poll.created_at.desc()
     )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
+    return polls
 
 
 @router.get("/popular-polls", response_model=PollsPublic)
 def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all popular polls."""
-    query = (
-        select(Poll)
-        .outerjoin(PollOption, PollOption.poll_id == Poll.id)
-        .where(
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=or_(
+            Poll.is_private.is_(False),
+            Poll.creator_email == user.email,
+            Poll.roll_ranges.any(
+                and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
+            ),
+        ),
+    )
+    return polls
+
+
+@router.get("/upcoming-polls", response_model=PollsPublic)
+def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
+    """Get all upcoming polls."""
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=and_(
+            Poll.start_time > current_bst_time(),
             or_(
                 Poll.is_private.is_(False),
                 Poll.creator_email == user.email,
                 Poll.roll_ranges.any(
                     and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
             )
-        )
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .group_by(Poll.id)
-        .order_by(func.sum(PollOption.total_votes).desc() if PollOption.total_votes is not None else 0)
-        .offset(skip)
-        .limit(limit)
+        ),
+        order_by_clause=Poll.start_time.asc()
     )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
+    return polls
 
 
-@router.get("/upcoming-polls", response_model=PollsPublic)
-def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
-    """Get all upcoming polls."""
-    query = (
-        select(Poll)
-        .where(
-            and_(
-                Poll.start_time > current_bst_time(),
-                or_(
-                    Poll.is_private.is_(False),
-                    Poll.creator_email == user.email,
-                    Poll.roll_ranges.any(
-                        and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
-                )
-            )
-        )
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .order_by(Poll.start_time.desc())
-        .offset(skip)
-        .limit(limit)
-    )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
-
-
-@router.get("/ended-polls", response_model=PollsPublic)
+@ router.get("/ended-polls", response_model=PollsPublic)
 def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all ended polls."""
-    query = (
-        select(Poll)
-        .where(
-            and_(
-                Poll.end_time < current_bst_time(),
-                or_(
-                    Poll.is_private.is_(False),
-                    Poll.creator_email == user.email,
-                    Poll.roll_ranges.any(
-                        and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
-                )
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=and_(
+            Poll.end_time < current_bst_time(),
+            or_(
+                Poll.is_private.is_(False),
+                Poll.creator_email == user.email,
+                Poll.roll_ranges.any(
+                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
             )
-        )
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .order_by(Poll.end_time.desc())
-        .offset(skip)
-        .limit(limit)
+        ),
+        order_by_clause=Poll.end_time.desc()
     )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
+    return polls
 
 
-@router.post("/create/", response_model=PollCreateResponse)
+@ router.post("/create/", response_model=PollCreateResponse)
 def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     """Create a new poll."""
     poll = Poll(
@@ -265,22 +227,31 @@ def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     return PollCreateResponse(poll_id=poll.id)
 
 
-@router.get("/{poll_id}/", response_model=PollPublic)
+@ router.get("/{poll_id}/", response_model=PollPublic)
 def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get a poll by its ID."""
-    poll = session.get(Poll, poll_id)
-    if not poll:
+    poll_with_votes = session.exec(
+        select(Poll, func.coalesce(func.count(Vote.id), 0).label('total_votes'))
+        .outerjoin(PollOption, PollOption.poll_id == Poll.id)
+        .outerjoin(Vote, Vote.option_id == PollOption.id)
+        .where(Poll.id == poll_id)
+        .group_by(Poll.id)
+    ).first()
+
+    if not poll_with_votes:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
+
+    poll, total_votes = poll_with_votes
 
     if poll.is_private and poll.creator_email != user.email and not any(roll_range.start <= user.roll <= roll_range.end for roll_range in poll.roll_ranges):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
 
-    return serialize_poll_public(poll)
+    return _serialize_poll_public(poll, total_votes)
 
 
-@router.delete("/{poll_id}/", response_model=Message)
+@ router.delete("/{poll_id}/", response_model=Message)
 def delete_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Delete a poll by its ID."""
     poll = session.get(Poll, poll_id)
@@ -296,7 +267,7 @@ def delete_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return Message(message="Poll deleted successfully")
 
 
-@router.get("/{poll_id}/options/", response_model=PollOptions)
+@ router.get("/{poll_id}/options/", response_model=PollOptions)
 def get_poll_options(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get all options of a poll by its ID."""
     poll = session.get(Poll, poll_id)
@@ -311,7 +282,7 @@ def get_poll_options(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return PollOptions(data=poll.options, count=len(poll.options))
 
 
-@router.get("/{poll_id}/roll-ranges/", response_model=RollRanges)
+@ router.get("/{poll_id}/roll-ranges/", response_model=RollRanges)
 def get_roll_ranges(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get all roll ranges of a poll by its ID."""
     poll = session.get(Poll, poll_id)
@@ -326,7 +297,7 @@ def get_roll_ranges(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return RollRanges(data=poll.roll_ranges, count=len(poll.roll_ranges))
 
 
-@router.post("/{poll_id}/options/", response_model=Message)
+@ router.post("/{poll_id}/options/", response_model=Message)
 def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentUser, session: SessionDep):
     """Create new poll options of a poll with poll_id."""
     poll = session.get(Poll, poll_id)
@@ -359,7 +330,7 @@ def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentU
     return Message(message="Options added successfully")
 
 
-@router.post("/{poll_id}/roll-ranges", response_model=Message)
+@ router.post("/{poll_id}/roll-ranges", response_model=Message)
 def add_allowed_voters(poll_id: UUID, request: RollRangesCreate, user: CurrentUser, session: SessionDep):
     poll = session.get(Poll, poll_id)
     if not poll:
@@ -391,14 +362,10 @@ def add_allowed_voters(poll_id: UUID, request: RollRangesCreate, user: CurrentUs
     return Message(message="Roll ranges added successfully")
 
 
-@router.get("/{poll_id}/result", response_model=PollResult)
+@ router.get("/{poll_id}/result", response_model=PollResult)
 def get_poll_result(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get the result of a poll."""
-    poll = session.exec(
-        select(Poll)
-        .where(Poll.id == poll_id)
-        .options(joinedload(Poll.options))
-    ).first()
+    poll = session.get(Poll, poll_id)
 
     if not poll:
         raise HTTPException(
@@ -412,31 +379,18 @@ def get_poll_result(poll_id: UUID, user: CurrentUser, session: SessionDep):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Poll has not ended yet")
 
-    total_votes = session.exec(
-        select(func.sum(PollOption.total_votes))
+    results = session.exec(
+        select(PollOption.option_text, func.coalesce(
+            func.count(Vote.id), 0).label('votes'))
+        .outerjoin(Vote, Vote.option_id == PollOption.id)
         .where(PollOption.poll_id == poll_id)
-    ).one_or_none() or 0
+        .group_by(PollOption.option_text)
+    ).all()
 
+    total_votes = sum([result.votes for result in results])
     data = [
-        PollOptionResult(option_text=option.option_text, votes=option.votes)
-        for option in poll.options
+        PollOptionResult(option_text=result.option_text, votes=result.votes)
+        for result in results
     ]
+
     return PollResult(data=data, total_votes=total_votes)
-
-
-@router.get("/{poll_id}/total-votes")
-def get_total_votes(poll_id: UUID, user: CurrentUser, session: SessionDep):
-    """Get the total number of votes of a poll."""
-    poll = session.get(Poll, poll_id)
-    if not poll:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="Poll not found")
-    if poll.is_private and poll.creator_email != user.email and not any(roll_range.start <= user.roll <= roll_range.end for roll_range in poll.roll_ranges):
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
-
-    total_votes = session.exec(
-        select(func.sum(PollOption.total_votes))
-        .where(PollOption.poll_id == poll_id)
-    ).one_or_none() or 0
-    return {"total_votes": total_votes}

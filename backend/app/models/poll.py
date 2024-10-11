@@ -82,7 +82,6 @@ class PollOption(SQLModel, table=True):
     poll: Poll = Relationship(back_populates="options")
     votes: list["Vote"] = Relationship(
         back_populates="poll_option", cascade_delete=True)
-    total_votes: int = Field(default=0)
 
 
 class PollOptions(BaseModel):
