@@ -1,6 +1,6 @@
 from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select, func, outerjoin
-from sqlalchemy.orm import joinedload, subqueryload
+from sqlmodel import select, func
+from sqlalchemy.orm import subqueryload
 from sqlalchemy.sql import or_, and_
 from uuid import UUID
 
