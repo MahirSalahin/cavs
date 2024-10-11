@@ -84,6 +84,7 @@ def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20, search
             joinedload(Poll.options),
             joinedload(Poll.roll_ranges)
         )
+        .order_by(Poll.start_time.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -106,6 +107,7 @@ def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: i
             joinedload(Poll.options),
             joinedload(Poll.roll_ranges)
         )
+        .order_by(Poll.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -134,6 +136,7 @@ def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
             joinedload(Poll.options),
             joinedload(Poll.roll_ranges)
         )
+        .order_by(Poll.created_at.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -198,6 +201,7 @@ def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, li
             joinedload(Poll.options),
             joinedload(Poll.roll_ranges)
         )
+        .order_by(Poll.start_time.desc())
         .offset(skip)
         .limit(limit)
     )
@@ -230,38 +234,7 @@ def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit
             joinedload(Poll.options),
             joinedload(Poll.roll_ranges)
         )
-        .offset(skip)
-        .limit(limit)
-    )
-    if search:
-        search = f"%{search}%"
-        query = query.where(or_(Poll.title.ilike(search),
-                            Poll.description.ilike(search)))
-    polls = session.exec(query).unique().all()
-    data = [serialize_poll_public(poll) for poll in polls]
-    return PollsPublic(data=data, count=len(polls))
-
-
-@router.get("/popular-polls", response_model=PollsPublic)
-def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
-    """Get all popular polls."""
-    query = (
-        select(Poll)
-        .where(
-            or_(
-                Poll.is_private.is_(False),
-                Poll.creator_email == user.email,
-                Poll.roll_ranges.any(
-                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
-            )
-        )
-        .options(
-            joinedload(Poll.options),
-            joinedload(Poll.roll_ranges)
-        )
-        .join(PollOption, PollOption.poll_id == Poll.id)
-        .group_by(Poll.id)
-        .order_by(func.sum(PollOption.votes).desc())
+        .order_by(Poll.end_time.desc())
         .offset(skip)
         .limit(limit)
     )
