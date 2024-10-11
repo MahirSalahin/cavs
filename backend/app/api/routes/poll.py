@@ -135,8 +135,11 @@ def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
         skip=skip,
         limit=limit,
         search=search,
-        where_clause=Poll.roll_ranges.any(
-            and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
+        where_clause=or_(
+            Poll.creator_email == user.email,
+            Poll.roll_ranges.any(
+                and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
+            )
         ),
         order_by_clause=Poll.created_at.desc()
     )
