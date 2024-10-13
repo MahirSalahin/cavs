@@ -4,6 +4,7 @@ from sqlalchemy.orm import subqueryload
 from sqlalchemy.sql import or_, and_
 from uuid import UUID
 
+from core.security import hash_email
 from models.common import Message
 from models.poll import (
     Poll,
@@ -12,8 +13,8 @@ from models.poll import (
     PollOption,
     PollOptions,
     PollOptionsCreate,
-    PollPublic,
-    PollsPublic,
+    PollResponse,
+    PollsResponse,
     PollOptionResult,
     PollResult,
     RollRange,
@@ -28,8 +29,8 @@ from api.deps import SessionDep, CurrentUser
 router = APIRouter()
 
 
-def _serialize_poll_public(poll, total_votes) -> PollPublic:
-    return PollPublic(
+def _serialize_poll_public(poll, total_votes, selected_option) -> PollResponse:
+    return PollResponse(
         id=poll.id,
         title=poll.title,
         description=poll.description,
@@ -39,12 +40,13 @@ def _serialize_poll_public(poll, total_votes) -> PollPublic:
         start_time=poll.start_time,
         end_time=poll.end_time,
         options=poll.options,
+        selected_option=selected_option,
         total_votes=total_votes,
         roll_ranges=poll.roll_ranges
     )
 
 
-def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause=None) -> PollsPublic:
+def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause=None) -> PollsResponse:
     """Get polls based on query parameters."""
     vote_count_subquery = (
         select(PollOption.poll_id, func.count(Vote.id).label('total_votes'))
@@ -53,10 +55,18 @@ def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause
         .subquery()
     )
 
+    selected_option_subquery = (
+        select(Vote.option_id, PollOption.poll_id)
+        .join(PollOption, PollOption.id == Vote.option_id)
+        .where(Vote.voter_email_hash == hash_email(user.email) if user else None)
+        .subquery()
+    )
+
     query = (
-        select(Poll, vote_count_subquery.c.total_votes,
+        select(Poll, vote_count_subquery.c.total_votes, selected_option_subquery.c.option_id.label('selected_option'),
                func.count().over().label('total_count'))
         .join(vote_count_subquery, vote_count_subquery.c.poll_id == Poll.id, isouter=True)
+        .join(selected_option_subquery, selected_option_subquery.c.poll_id == Poll.id, isouter=True)
         .where(where_clause)
         .options(
             subqueryload(Poll.options),
@@ -74,14 +84,21 @@ def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause
         )
 
     polls = session.exec(query).unique().all()
-    total_count = polls[0][2] if polls else 0
+    total_count = polls[0][3] if polls else 0
 
-    data = [_serialize_poll_public(poll, total_votes or 0)
-            for poll, total_votes, _ in polls]
-    return PollsPublic(data=data, count=total_count)
+    data = [
+        _serialize_poll_public(poll, total_votes or 0,
+                               session.exec(
+                                   select(PollOption)
+                                   .where(PollOption.id == selected_option)).first()
+                               )
+        for poll, total_votes, selected_option, _ in polls
+    ]
+
+    return PollsResponse(data=data, count=total_count)
 
 
-@router.get("/", response_model=PollsPublic)
+@ router.get("/", response_model=PollsResponse)
 def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls."""
     polls = _get_polls(
@@ -102,7 +119,7 @@ def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int 
     return polls
 
 
-@router.get("/public", response_model=PollsPublic)
+@ router.get("/public", response_model=PollsResponse)
 def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all public polls."""
     polls = _get_polls(
@@ -117,7 +134,7 @@ def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20, search
     return polls
 
 
-@router.get("/my-polls", response_model=PollsPublic)
+@ router.get("/my-polls", response_model=PollsResponse)
 def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls created by the user."""
     polls = _get_polls(
@@ -132,7 +149,7 @@ def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: i
     return polls
 
 
-@router.get("/allowed-polls", response_model=PollsPublic)
+@ router.get("/allowed-polls", response_model=PollsResponse)
 def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all polls allowed for the user."""
     polls = _get_polls(
@@ -152,7 +169,7 @@ def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
     return polls
 
 
-@router.get("/popular-polls", response_model=PollsPublic)
+@ router.get("/popular-polls", response_model=PollsResponse)
 def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all popular polls."""
     polls = _get_polls(
@@ -172,7 +189,7 @@ def get_popular_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
     return polls
 
 
-@router.get("/upcoming-polls", response_model=PollsPublic)
+@ router.get("/upcoming-polls", response_model=PollsResponse)
 def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all upcoming polls."""
     polls = _get_polls(
@@ -195,7 +212,7 @@ def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, li
     return polls
 
 
-@ router.get("/ended-polls", response_model=PollsPublic)
+@ router.get("/ended-polls", response_model=PollsResponse)
 def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all ended polls."""
     polls = _get_polls(
@@ -236,7 +253,7 @@ def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     return PollCreateResponse(poll_id=poll.id)
 
 
-@ router.get("/{poll_id}/", response_model=PollPublic)
+@ router.get("/{poll_id}/", response_model=PollResponse)
 def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get a poll by its ID."""
     poll_with_votes = session.exec(
@@ -257,7 +274,13 @@ def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
 
-    return _serialize_poll_public(poll, total_votes)
+    selected_option = session.exec(
+        select(PollOption)
+        .join(Vote, Vote.option_id == PollOption.id)
+        .where(Vote.voter_email_hash == hash_email(user.email), PollOption.poll_id == poll_id)
+    ).first()
+
+    return _serialize_poll_public(poll, total_votes, selected_option)
 
 
 @ router.delete("/{poll_id}/", response_model=Message)

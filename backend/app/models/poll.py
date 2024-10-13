@@ -3,7 +3,7 @@ from uuid import UUID
 from datetime import datetime
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from utils.current_bst_time import current_bst_time
 
@@ -56,7 +56,7 @@ class PollCreateResponse(BaseModel):
     poll_id: UUID
 
 
-class PollPublic(BaseModel):
+class PollResponse(BaseModel):
     id: UUID
     title: str
     description: str
@@ -67,11 +67,12 @@ class PollPublic(BaseModel):
     end_time: datetime
     roll_ranges: list[RollRange]
     options: list["PollOption"]
+    selected_option: Optional["PollOption"]
     total_votes: int
 
 
-class PollsPublic(BaseModel):
-    data: list[PollPublic]
+class PollsResponse(BaseModel):
+    data: list[PollResponse]
     count: int
 
 
