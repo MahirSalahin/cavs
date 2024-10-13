@@ -6,7 +6,7 @@ import { PollType } from "@/types"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 import CountDown from './CountDown'
 import { Button } from './ui/button'
-import { Users, X } from 'lucide-react'
+import { Users, Trash2 } from 'lucide-react'
 import { axios } from '@/lib/axios'
 import { useRouter } from 'next/navigation'
 import AlertModel from './modal/AlertModel'
@@ -68,44 +68,44 @@ export default function PollCard({ poll, user }: PollCardProps) {
                 onConfirm={onDelete}
             />
             {/* <FadeUp delay={index * .3}> */}
-                <Card className="!w-full">
-                    <CardHeader>
-                        <div className="flex items-center justify-between gap-4">
-                            <CardTitle className="text-2xl">{poll.title}</CardTitle>
-                            {user?.email == poll.creator_email &&
-                                <Button
-                                    onClick={() => setOpen(true)}
-                                    variant='outline'
-                                    className="ml-auto rounded-full"
-                                    size='icon'
-                                >
-                                    <X size={16} />
-                                </Button>
-                            }
-                        </div>
-                        <p className="text-sm text-gray-400">{poll.description}</p>
-                    </CardHeader>
-                    <CardContent>
-                        <CountDown start={new Date(poll.start_time)} end={new Date(poll.end_time)} />
-                        <Link href={`/polls/vote/${poll.id}`} className="w-full">
-                            <Button variant='outline' className="w-full">
-                                {
-                                    new Date(poll.end_time) >= new Date() ? 'Vote' : 'View Results'
-                                }
+            <Card className="!w-full">
+                <CardHeader>
+                    <div className="flex items-center justify-between gap-4">
+                        <CardTitle className="text-2xl">{poll.title}</CardTitle>
+                        {user?.email == poll.creator_email &&
+                            <Button
+                                onClick={() => setOpen(true)}
+                                variant='outline'
+                                className="ml-auto rounded-full"
+                                size='icon'
+                            >
+                                <Trash2 className='text-red-500' size={16} />
                             </Button>
-                        </Link>
-                    </CardContent>
-                    <CardFooter className='flex items-center justify-between text-muted-foreground text-xs'>
-                        <span className='flex items-center'>
-                            <Users size={12} className="inline mr-2" />
-                            {poll.total_votes} Votes
-                        </span>
+                        }
+                    </div>
+                    <p className="text-sm text-gray-400">{poll.description}</p>
+                </CardHeader>
+                <CardContent>
+                    <CountDown start={new Date(poll.start_time)} end={new Date(poll.end_time)} />
+                    <Link href={`/polls/vote/${poll.id}`} className="w-full">
+                        <Button variant='outline' className="w-full">
+                            {
+                                new Date(poll.end_time) >= new Date() ? 'Vote' : 'View Results'
+                            }
+                        </Button>
+                    </Link>
+                </CardContent>
+                <CardFooter className='flex items-center justify-between text-muted-foreground text-xs'>
+                    <span className='flex items-center'>
+                        <Users size={12} className="inline mr-2" />
+                        {poll.total_votes} Votes
+                    </span>
 
-                        <div>
-                            Created at <span>{new Date(poll.created_at).toLocaleDateString()}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
-                        </div>
-                    </CardFooter>
-                </Card>
+                    <div>
+                        Created at <span>{new Date(poll.created_at).toLocaleDateString()}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                    </div>
+                </CardFooter>
+            </Card>
             {/* </FadeUp > */}
         </>
     )

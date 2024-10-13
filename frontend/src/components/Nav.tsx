@@ -7,18 +7,15 @@ import { getUser, signout } from '@/lib/auth-actions'
 import AnimatedText from './AnimatedText'
 import { User } from '@supabase/supabase-js'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from './ui/dropdown-menu'
-import { Avatar, AvatarFallback, AvatarImage } from './ui/avatar'
+import { Avatar } from './ui/avatar'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
+import Image from 'next/image'
 
 export default function Nav() {
     const [isMounted, setIsMounted] = React.useState(false)
     const [user, setUser] = React.useState<User | null>(null)
     const router = useRouter()
-
-    const getInitials = (name?: string) => {
-        return name ? name.split(' ').map(n => n[0]).join('').toUpperCase() : '??';
-    };
 
     useEffect(() => {
         getUser()
@@ -45,8 +42,13 @@ export default function Nav() {
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Avatar className="w-8 h-8 cursor-pointer">
-                                        <AvatarImage src={user?.user_metadata?.avatar_url} alt={user.user_metadata.full_name} />
-                                        <AvatarFallback>{getInitials(user?.user_metadata.full_name)}</AvatarFallback>
+                                        <Image
+                                            src={user.user_metadata.avatar_url}
+                                            alt={user.user_metadata.full_name}
+                                            width={32}
+                                            height={32}
+                                            className="rounded-full"
+                                        />
                                     </Avatar>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56">
