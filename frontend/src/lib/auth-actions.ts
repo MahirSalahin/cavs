@@ -67,22 +67,3 @@ export async function getUser() {
 
   return data.user
 }
-
-
-const JWT_SECRET = 'uRnRI3ozsT23Dk5nHS9wwyxCr3YdFdZ15HF1vj4GWFG6uJU46OOZw/ArYMfnJhr1GVMM9z6rDnY9xb7lXYLyRg=='
-import jwt from 'jsonwebtoken'
-
-export async function decodeJWT() {
-try {
-    const cookie = cookies()
-    const access_token = cookie.get('access_token')?.value
-
-    if(!access_token) throw new Error('No access token found')
-  
-    const decoded = jwt.verify(access_token, JWT_SECRET)
-    console.log({ decoded })
-} catch (error) {
-    if(error instanceof Error) console.log({Error: error?.message})
-    // redirect("/error");
-}
-}

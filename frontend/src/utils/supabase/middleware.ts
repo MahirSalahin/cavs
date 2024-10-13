@@ -2,19 +2,22 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth-actions'
 
 export async function updateSession(request: NextRequest) {
-    console.log("Middleware invoking 🔥")
+    // console.log("Middleware invoking 🔥")
 
     const supabaseResponse = NextResponse.next({
         request,
     })
 
-    const user = await getUser() ?? null
+    const user = await getUser()
 
-    if(request.nextUrl.pathname == '/' || request.nextUrl.pathname == '/auth/callback') {
+    if (request.nextUrl.pathname == '/' ||
+        request.nextUrl.pathname == '/auth/callback'
+        // || request.nextUrl.pathname.startsWith('/polls')
+    ) {
         return;
     }
 
-    if(user && request.nextUrl.pathname.startsWith('/login')) {
+    if (user && request.nextUrl.pathname.startsWith('/login')) {
         const url = request.nextUrl.clone()
         url.pathname = '/'
         return NextResponse.redirect(url)

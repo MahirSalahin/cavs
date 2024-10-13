@@ -1,20 +1,20 @@
-import axios, { AxiosError, AxiosRequestConfig } from "axios";
+import baseAxios, { AxiosError, AxiosRequestConfig } from "axios";
 
 
-export const axiosAuth = axios.create({
-    baseURL: process.env.API_URL ?? process.env.NEXT_PUBLIC_API_URL,
+export const axiosAuth = baseAxios.create({
+    baseURL: process.env.NEXT_PUBLIC_API_URL,
     headers: {
         "Content-Type": "application/json",
     },
 });
 
-export type AxiosResponseType = {
+// Update AxiosResponseType to use the new DataType type
+export type AxiosResponseType<T> = {
     success: boolean;
     message: string;
-    data: object | null | undefined;
+    data: T;
     errors: [string] | null;
 };
-
 // Define a type for options that can include headers and other AxiosRequestConfig properties
 export interface Axios2Options extends AxiosRequestConfig {
     headers?: object;
@@ -22,9 +22,9 @@ export interface Axios2Options extends AxiosRequestConfig {
 }
 
 // Create a generic axios function that can handle different HTTP methods
-export const axios2 = async (url: string, options: Axios2Options = {}): Promise<AxiosResponseType> => {
+export const axios = async <T>(url: string, options: Axios2Options = {}): Promise<AxiosResponseType<T>> => {
     try {
-        const res = await axiosAuth( url, {
+        const res = await axiosAuth(url, {
             method: options.method || 'GET', // Default to GET if no method is provided
             headers: {
                 ...axiosAuth.defaults.headers,
@@ -33,18 +33,30 @@ export const axios2 = async (url: string, options: Axios2Options = {}): Promise<
             ...options,
         });
 
-        return res.data;
+        if (res.status >= 400) throw res;
+
+        return {
+            success: true,
+            message: "Successful",
+            data: res.data as T,
+            errors: null,
+        };
     } catch (error) {
         if (error instanceof AxiosError && error.response) {
-            return error.response.data; // Return the server response data if available
+            return {
+                success: false,
+                message: error.response.data.detail,
+                data: null as unknown as T,
+                errors: null,
+            };
         }
 
         // Return a generic error message if there's no specific server response
         return {
             success: false,
             message: "Failed to fetch data",
-            data: null,
-            errors: null
+            data: null as unknown as T,
+            errors: null,
         };
     }
 };
