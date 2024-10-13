@@ -45,14 +45,17 @@ def _serialize_poll_public(poll, total_votes) -> PollPublic:
 
 
 def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause=None) -> PollsPublic:
+    """Get polls based on query parameters."""
     vote_count_subquery = (
         select(PollOption.poll_id, func.count(Vote.id).label('total_votes'))
         .join(Vote, Vote.option_id == PollOption.id, isouter=True)
         .group_by(PollOption.poll_id)
         .subquery()
     )
+
     query = (
-        select(Poll, vote_count_subquery.c.total_votes)
+        select(Poll, vote_count_subquery.c.total_votes,
+               func.count().over().label('total_count'))
         .join(vote_count_subquery, vote_count_subquery.c.poll_id == Poll.id, isouter=True)
         .where(where_clause)
         .options(
@@ -63,6 +66,7 @@ def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause
         .offset(skip)
         .limit(limit)
     )
+
     if search:
         search = f"%{search}%"
         query = query.where(
@@ -70,9 +74,11 @@ def _get_polls(user, session, skip, limit, search, where_clause, order_by_clause
         )
 
     polls = session.exec(query).unique().all()
+    total_count = polls[0][2] if polls else 0
+
     data = [_serialize_poll_public(poll, total_votes or 0)
-            for poll, total_votes in polls]
-    return PollsPublic(data=data, count=len(polls))
+            for poll, total_votes, _ in polls]
+    return PollsPublic(data=data, count=total_count)
 
 
 @router.get("/", response_model=PollsPublic)
