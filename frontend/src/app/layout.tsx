@@ -18,7 +18,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "CUET Anonymous Voting System",
+  title: "CAVS",
   description: "CUET Anonymous Voting System is the new way to build you opinion stronger.",
 };
 

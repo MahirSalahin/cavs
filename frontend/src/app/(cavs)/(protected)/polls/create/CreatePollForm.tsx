@@ -96,7 +96,7 @@ export default function MultiStepCreatePollForm() {
                             console.log({ idPairsRes: res })
                             if (res.success) {
                                 setIsSubmitted(true)
-                                setTimeout(() => router.push('/polls'), 1000)
+                                setTimeout(() => router.push('/polls/all'), 500)
                                 toast({
                                     title: "Success ✅",
                                     description: "Poll is created successfully!",
@@ -257,8 +257,8 @@ export default function MultiStepCreatePollForm() {
                                     </Button>
                                 </> :
                                 <>
-                                    <h2 className="text-2xl font-bold text-center">Poll is Public</h2>
-                                    <p className="text-center text-gray-600">The poll is available for every cuetians. If you want this for some specific students, make it private and set student id ranges</p>
+                                    <h2 className="text-2xl font-bold text-center text-red-900">Poll is Public</h2>
+                                    <p className="text-center text-gray-600">This poll is open to all CUETians. To restrict voting to specific students, please make the poll private and specify the student ID ranges. Otherwise, click next to proceed.</p>
                                 </>
                         )}
 
