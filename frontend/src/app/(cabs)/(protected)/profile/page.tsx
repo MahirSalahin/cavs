@@ -1,11 +1,41 @@
-// import { getUser } from '@/lib/auth-actions'
-import React from 'react'
+import { getUser } from '@/lib/auth-actions'
+import { Metadata } from 'next'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Card, CardHeader, CardTitle } from "@/components/ui/card"
+
+export const metadata: Metadata = {
+  title: 'Profile',
+}
 
 export default async function ProfilePage() {
-  // const user = await getUser()
+  const user = await getUser()
+
+  if (!user) {
+    return <div className="container mt-8 text-center">User not found</div>
+  }
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
   return (
-    <div className='container'>
-        
+    <div className='container max-w-2xl mt-8'>
+      <Card>
+        <CardHeader className="flex flex-row items-center gap-4">
+          <Avatar className="h-20 w-20">
+            <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.full_name} />
+            <AvatarFallback>{user.user_metadata.full_name.charAt(0)}</AvatarFallback>
+          </Avatar>
+          <div>
+            <CardTitle className="text-2xl">{user.user_metadata.full_name}</CardTitle>
+            <p className="text-sm text-muted-foreground">{user.email}</p>
+          </div>
+        </CardHeader>
+      </Card>
     </div>
   )
 }

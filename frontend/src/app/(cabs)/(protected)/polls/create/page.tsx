@@ -3,7 +3,7 @@ import { Metadata } from 'next'
 import CreatePollForm from './CreatePollForm';
 
 export const metadata: Metadata = {
-  title: "Create Contact",
+  title: "Create New Poll",
 };
 
 export default function CreatePollPage() {

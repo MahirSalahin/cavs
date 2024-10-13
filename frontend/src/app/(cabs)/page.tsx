@@ -17,7 +17,7 @@ export default async function HomePage() {
       </FadeUp>
 
       <FadeUp delay={0.7}>
-        <LinkButton className='flex items-center gap-1' href="/polls">Get Started <ArrowRight size={16} /></LinkButton>
+        <LinkButton className='flex items-center gap-1' href="/polls/all">Get Started <ArrowRight size={16} /></LinkButton>
       </FadeUp>
 
     </section>
