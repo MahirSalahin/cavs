@@ -343,9 +343,9 @@ def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentU
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to add options to this poll")
 
     option_texts = request.option_texts
-    if len(option_texts) == 0:
+    if len(option_texts) < 2:
         raise HTTPException(
-            status_code=400, detail="At least one option is required")
+            status_code=400, detail="At least two options is required")
     if len(option_texts) + len(poll.options) > 20:
         raise HTTPException(
             status_code=400, detail="A poll can have at most 20 options")
