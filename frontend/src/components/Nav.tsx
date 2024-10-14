@@ -30,18 +30,18 @@ export default function Nav() {
     return (
         <div className="sticky left-0 top-0 z-50 w-full bg-background/30 backdrop-blur-[12px] h-[60px] flex justify-center items-center border-b overflow-hidden">
             <nav className="flex justify-between items-center container">
-                <Link className="text-md flex items-center" href="/"><AnimatedText text='CAVS' text_size='text-[36px]' /></Link>
-                <div className='flex items-center justify-center gap-6'>
+                <Link className="text-md flex items-center" href="/"><AnimatedText text='CAVS' className='sm:text-[36px] text-xl' /></Link>
+                <div className='flex items-center justify-center gap-3 sm:gap-6'>
                     {
                         user ? <>
-                            <Link href='/polls/all' className='text-sm'>All Polls</Link>
-                            <LinkButton variant='secondary' size='sm' className='flex items-center gap-1' href="/polls/create">
+                            <Link href='/polls/all' className='sm:text-sm text-xs'>All Polls</Link>
+                            <LinkButton variant='secondary' size='sm' className='flex items-center gap-1 sm:px-3 px-2 sm:h-8 h-7' href="/polls/create">
                                 Create Poll
                                 <Plus size={14} />
                             </LinkButton>
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Avatar className="w-8 h-8 cursor-pointer">
+                                    <Avatar className="size-6 sm:size-8 cursor-pointer">
                                         <Image
                                             src={user.user_metadata.avatar_url}
                                             alt={user.user_metadata.full_name}
@@ -53,7 +53,6 @@ export default function Nav() {
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent className="w-56">
                                     <DropdownMenuLabel className='text-center'>My Account</DropdownMenuLabel>
-                                    <DropdownMenuSeparator />
                                     <DropdownMenuItem asChild>
                                         <Link href="/profile">Profile</Link>
                                     </DropdownMenuItem>

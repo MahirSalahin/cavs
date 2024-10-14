@@ -1,15 +1,18 @@
 import React from 'react'
 import { cn } from "@/lib/utils"
 
-const AnimatedText = ({ text, text_size = '' }: { text: string, text_size?: string }) => {
+const AnimatedText = ({ text, className = '' }: { text: string, className?: string }) => {
     return (
-        <h1 className={`text-center ${text_size} font-[500] leading-[96px] tracking-tight`}>
+        <h1 className={cn(
+            'text-center font-[500] leading-[96px] tracking-tight',
+            className
+        )}>
             {text.split('').map((char, index) => (
                 <span
                     key={index}
                     className={cn(
                         "inline-block animate-pulse-left-to-right",
-                        "bg-gradient-to-r from-pink-500 via-indigo-500 to-purple-500",
+                        "bg-gradient-to-r from-white via-white to-white",
                         "text-transparent bg-clip-text"
                     )}
                     style={{

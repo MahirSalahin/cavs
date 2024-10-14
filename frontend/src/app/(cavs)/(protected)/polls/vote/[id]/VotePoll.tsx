@@ -9,7 +9,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/utils"
 import { axios } from "@/lib/axios"
 import { useToast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
+import { notFound, useRouter } from "next/navigation"
 import AlertModel from "@/components/modal/AlertModel"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Info, Users } from "lucide-react"
@@ -33,7 +33,7 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
     const [pollResult, setPollResult] = useState<PollResultType | null>(null)
     const [open, setOpen] = useState(false)
     const [selectedOption, setSelectedOption] = useState<string>()
-    const [isLoading, setIsLoading] = useState<boolean>(false)
+    const [isLoading, setIsLoading] = useState<boolean>(true)
     const [submitting, setSubmitting] = useState<boolean>(false)
     const router = useRouter()
 
@@ -52,10 +52,18 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
                 'Authorization': `Bearer ${access_token}`
             }
         })
+
         if (res.success) {
             setSelectedOption(res.data.selected_option?.id)
             setPoll(res.data)
             setPollOptions(res.data.options)
+        }
+        else {
+            toast({
+                title: "Error ❌",
+                description: res.message ?? "Something went wrong!",
+            })
+            router.push('/polls/all')
         }
         setIsLoading(false)
     }

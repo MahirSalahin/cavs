@@ -15,11 +15,11 @@ import { User } from '@supabase/supabase-js'
 
 interface PollCardProps {
     poll: PollType
-    index: number
+    updatePollsAfterDelete: (pollId: string) => void
     user: User | null
 }
 
-export default function PollCard({ poll, user }: PollCardProps) {
+export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCardProps) {
     const router = useRouter()
     const [mounted, setMounted] = useState(false)
     const [open, setOpen] = useState(false)
@@ -41,7 +41,7 @@ export default function PollCard({ poll, user }: PollCardProps) {
                 title: "Success ✅",
                 description: "The Poll is deleted successfully!",
             })
-            router.refresh()
+            updatePollsAfterDelete(poll.id)
         }
         else {
             toast({
