@@ -1,25 +1,30 @@
-
 import { LinkButton } from '@/components/ui/linkButton';
 import { ArrowRight } from 'lucide-react';
 import { FadeDown, FadeUp } from '@/components/Animation';
-
+import AnimatedText from '@/components/AnimatedText';
 
 export default async function HomePage() {
-
   return (
-    <section className='flex justify-center items-center flex-col text-center container'>
+    <section className="flex justify-center items-center flex-col text-center container">
       <FadeDown>
-        <h1 className="bg-gradient-to-br dark:from-white from-black from-30% dark:to-white/40 to-black/40 bg-clip-text py-6 text-5xl font-medium text-center leading-none tracking-tighter text-transparent text-balance sm:text-6xl md:text-7xl lg:text-8xl ">CAVS is the new way<br className="hidden md:block" /> to build you opinion stronger.</h1>
+        <h1 className="bg-gradient-to-br dark:from-white from-black from-30% dark:to-white/40 to-black/40 bg-clip-text py-6 text-5xl font-medium text-center leading-none tracking-tighter text-transparent text-balance sm:text-6xl md:text-7xl lg:text-8xl">
+          Have Your Say, the Anonymous Way!<br className="hidden md:block" />
+          CUET Anonymous Voting System- <span><AnimatedText text='CAVS' className='text -7xl sm:text-6xl md:text-7xl lg:text-8xl' /></span>
+        </h1>
       </FadeDown>
 
       <FadeUp delay={0.3}>
-        <p className="mb-12 text-lg tracking-tight text-gray-400 md:text-xl text-balance">Beautifully designed, animated components and templates built with<br className="hidden md:block" /> Tailwind CSS, React, and Framer Motion.</p>
+        <p className="mb-12 text-lg tracking-tight text-gray-400 md:text-xl text-balance">
+          Vote without fear, without bias. Your voice, your choice, anonymously recorded.<br className="hidden md:block" />
+          Join your peers at CUET and make your opinion count securely and privately.
+        </p>
       </FadeUp>
 
       <FadeUp delay={0.7}>
-        <LinkButton className='flex items-center gap-1' href="/polls/all">Get Started <ArrowRight size={16} /></LinkButton>
+        <LinkButton className="flex items-center gap-1" href="/polls/all">
+          Get Started <ArrowRight size={16} />
+        </LinkButton>
       </FadeUp>
-
     </section>
   );
 }
