@@ -159,6 +159,7 @@ def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, lim
         limit=limit,
         search=search,
         where_clause=or_(
+            Poll.is_private.is_(False),
             Poll.creator_email == user.email,
             Poll.roll_ranges.any(
                 and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
