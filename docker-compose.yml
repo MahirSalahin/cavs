@@ -1,0 +1,33 @@
+version: "3.8"
+
+services:
+  backend:
+    image: "cavs-backend:${TAG-latest}"
+    restart: always
+    networks:
+      - default
+    env_file:
+      - ./backend/app/.env
+    ports:
+      - "8000:8000"
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      args:
+        INSTALL_DEV: ${INSTALL_DEV-false}
+    platform: linux/amd64
+  frontend:
+    image: "cavs-frontend:${TAG-latest}"
+    restart: always
+    networks:
+      - default
+    env_file:
+      - ./frontend/.env.local
+    ports:
+      - "3000:3000"
+    build:
+      context: ./frontend
+    platform: linux/amd64
+
+volumes:
+  app-db-data:

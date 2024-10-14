@@ -2,7 +2,7 @@ from sqlmodel import SQLModel, create_engine, Session
 from core.config import settings
 
 # Create the engine for PostgreSQL
-engine = create_engine(settings.DATABASE_URL)
+engine = create_engine(str(settings.SQLALCHEMY_DATABASE_URL), echo=True)
 
 # Create a session for the database connection
 def get_session():

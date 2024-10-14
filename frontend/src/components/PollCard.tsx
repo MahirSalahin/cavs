@@ -8,7 +8,6 @@ import CountDown from './CountDown'
 import { Button } from './ui/button'
 import { Users, Trash2 } from 'lucide-react'
 import { axios } from '@/lib/axios'
-import { useRouter } from 'next/navigation'
 import AlertModel from './modal/AlertModel'
 import { useToast } from '@/hooks/use-toast'
 import { User } from '@supabase/supabase-js'
@@ -20,7 +19,6 @@ interface PollCardProps {
 }
 
 export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCardProps) {
-    const router = useRouter()
     const [mounted, setMounted] = useState(false)
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
