@@ -41,7 +41,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
 
 
     const handleOptionClick = (optionId: string) => {
-        if (poll?.selected_option) return;
+        if (poll?.selected_option || (poll && new Date(poll.start_time)>=new Date())) return;
         setSelectedOption(optionId)
     }
 
@@ -195,7 +195,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                                                         key={index}
                                                         className={cn(
                                                             "flex items-center justify-between mb-4 cursor-pointer select-none transition border p-3 rounded-md",
-                                                            poll.selected_option ? "" : "hover:border-foreground",
+                                                            poll.selected_option || new Date(poll.start_time)>=new Date() ? "" : "hover:border-foreground",
                                                             option.id === selectedOption ? "border-foreground" : ""
                                                         )}
                                                         onClick={() => handleOptionClick(option.id)}
@@ -209,7 +209,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                                     }
                                 </RadioGroup>
                             </CardContent>
-                            {!isLoading && !pollResult && !poll.selected_option &&
+                            {!isLoading && !pollResult && !poll.selected_option && new Date(poll.start_time)<new Date() &&
                                 <CardFooter>
                                     <Button
                                         variant='outline'

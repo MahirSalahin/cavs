@@ -25,14 +25,13 @@ export default function Nav() {
             })
     }, [])
 
-    if (!isMounted) return null
-
     return (
         <div className="sticky left-0 top-0 z-50 w-full bg-background/30 backdrop-blur-[12px] h-[60px] flex justify-center items-center border-b overflow-hidden">
             <nav className="flex justify-between items-center container">
                 <Link className="text-md flex items-center" href="/"><AnimatedText text='CAVS' className='sm:text-[36px] text-xl' /></Link>
                 <div className='flex items-center justify-center gap-3 sm:gap-6'>
                     {
+                        isMounted ?
                         user ? <>
                             <Link href='/polls/all' className='sm:text-sm text-xs'>All Polls</Link>
                             <LinkButton variant='secondary' size='sm' className='flex items-center gap-1 sm:px-3 px-2 sm:h-8 h-7' href="/polls/create">
@@ -72,6 +71,8 @@ export default function Nav() {
                         </>
                             :
                             <LinkButton variant='secondary' href='/login'>Join</LinkButton>
+                            :
+                            null
 
                     }
                 </div>

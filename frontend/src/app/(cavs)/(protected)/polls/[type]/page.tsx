@@ -254,12 +254,20 @@ export default function PollsPage() {
   useEffect(() => {
     if (!pollsFilterType.includes(params?.type)) return notFound();
     getPolls()
+
+    return () => {
+      setPolls([])
+    }
   }, [skip, setSkip])
 
   useEffect(() => {
     if (!pollsFilterType.includes(params?.type)) return notFound();
     setSkip(0)
     getPolls(true)
+
+    return () => {
+      setPolls([])
+    }
   }, [searchParams.get('search')])
 
   return (

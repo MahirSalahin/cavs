@@ -97,6 +97,7 @@ export default function MultiStepCreatePollForm() {
                             console.log({ idPairsRes: res })
                             if (res.success) {
                                 setIsSubmitted(true)
+                                setIsLoading(false)
                                 setTimeout(() => router.push('/polls/all'), 500)
                                 toast({
                                     title: "Success ✅",
@@ -110,12 +111,12 @@ export default function MultiStepCreatePollForm() {
         })
             .catch((err) => {
                 console.error(err)
+                setIsLoading(false)
                 toast({
                     title: "Error ❌",
                     description: "Failed to create poll!",
                 })
             })
-            .finally(() => setIsLoading(false))
     }, 300)
 
     const nextStep = () => {
@@ -127,7 +128,7 @@ export default function MultiStepCreatePollForm() {
     }
 
     return (
-        <div className='space-y-4'>
+        <div className='space-y-4 max-w-[1000px] mx-auto'>
             <div className='flex justify-between items-center'>
                 <h4>Create New Poll - Step {currentStep} of 4</h4>
             </div>

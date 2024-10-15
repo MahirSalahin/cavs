@@ -1,40 +1,48 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect } from 'react'
 import Countdown, { CountdownRendererFn } from 'react-countdown';
 import { Badge } from './ui/badge';
 
 export default function CountDown({ start, end }: { start: Date, end: Date }) {
     const [isMounted, setIsMounted] = React.useState(false)
+    const [countdownDate, setCountdownDate] = React.useState<Date | null>(null)
+    const [message, setMessage] = React.useState<string>('')
+
     const now = new Date();
+    useEffect(() => {
+        const interval = setInterval(() => {
+            const currentTime = new Date();
+            if (currentTime < start) {
+                setCountdownDate(start);
+                setMessage('Starts in');
+            } else if (currentTime >= start && currentTime < end) {
+                setCountdownDate(end);
+                setMessage('Ends in');
+            } else {
+                setCountdownDate(null);
+                setMessage('Ended');
+            }
+        }, 1000);
+
+        return () => clearInterval(interval);
+    }, [start, end]);
 
     React.useEffect(() => {
         setIsMounted(true)
     }, [])
 
-    if (!isMounted) return null;
+    if (!isMounted || !message) return null;
 
-    let countdownDate;
-    let message;
-
-    if (now < start) {
-        countdownDate = start;
-        message = "Starts in";
-    } else if (now >= start && now < end) {
-        countdownDate = end;
-        message = "Ends in";
-    } else {
-        message = "Finished";
-    }
 
     return (
         <div className='flex flex-col jusce gap-2 items-start mb-4'>
             <Badge className='text-[10px]'>{message}</Badge>
-            {now<=end && 
-            <Countdown
-                date={countdownDate}
-                renderer={renderer}
-            />}
+            {countdownDate && now <= end &&
+                <Countdown
+                    date={countdownDate}
+                    renderer={renderer}
+                />}
         </div>
     )
 }

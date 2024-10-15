@@ -29,8 +29,8 @@ export async function signInWithGoogle() {
   // const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
-    options:{
-      redirectTo: 'https://cavs.vercel.app/auth/callback'
+    options: {
+      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback`
     }
   });
 
@@ -67,8 +67,8 @@ export async function getUser() {
       'Authorization': `Bearer ${access_token}`
     }
   })
-  
-  if(res.success){
+
+  if (res.success) {
     return res.data
   }
 
