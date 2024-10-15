@@ -1,12 +1,9 @@
 import uuid
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
 from typing import TYPE_CHECKING, Optional
-
-from utils.current_bst_time import current_bst_time
-
 
 if TYPE_CHECKING:
     from models.vote import Vote
@@ -34,10 +31,16 @@ class Poll(SQLModel, table=True):
     title: str = Field(max_length=255)
     description: str = Field(max_length=1024)
     is_private: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=current_bst_time)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     creator_email: str = Field(max_length=255)
-    start_time: datetime = Field(default_factory=current_bst_time)
-    end_time: datetime
+    start_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    end_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+    )
     options: list["PollOption"] = Relationship(
         back_populates="poll", cascade_delete=True)
     roll_ranges: list["RollRange"] = Relationship(
@@ -48,8 +51,11 @@ class PollCreate(BaseModel):
     title: str = Field(max_length=255)
     description: str | None = Field(max_length=1024)
     is_private: bool = Field(default=False)
-    start_time: datetime = Field(default_factory=current_bst_time)
-    end_time: datetime
+    start_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc))
+    end_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+    )
 
 
 class PollCreateResponse(BaseModel):

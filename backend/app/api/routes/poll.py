@@ -1,9 +1,11 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, func
 from sqlalchemy.orm import subqueryload
 from sqlalchemy.sql import or_, and_
 from uuid import UUID
 
+from api.deps import SessionDep, CurrentUser
 from core.security import hash_email
 from models.common import Message
 from models.poll import (
@@ -22,8 +24,6 @@ from models.poll import (
     RollRangesCreate,
 )
 from models.vote import Vote
-from utils.current_bst_time import current_bst_time
-from api.deps import SessionDep, CurrentUser
 
 
 router = APIRouter()
@@ -200,7 +200,7 @@ def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, li
         limit=limit,
         search=search,
         where_clause=and_(
-            Poll.start_time > current_bst_time(),
+            Poll.start_time > datetime.now(timezone.utc),
             or_(
                 Poll.is_private.is_(False),
                 Poll.creator_email == user.email,
@@ -223,7 +223,7 @@ def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit
         limit=limit,
         search=search,
         where_clause=and_(
-            Poll.end_time < current_bst_time(),
+            Poll.end_time < datetime.now(timezone.utc),
             or_(
                 Poll.is_private.is_(False),
                 Poll.creator_email == user.email,
@@ -408,7 +408,7 @@ def get_poll_result(poll_id: UUID, user: CurrentUser, session: SessionDep):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to view this poll")
 
-    if poll.end_time.astimezone(current_bst_time().tzinfo) > current_bst_time():
+    if poll.end_time > datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Poll has not ended yet")
 

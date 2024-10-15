@@ -1,3 +1,4 @@
+from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status
 from sqlmodel import select, and_
 
@@ -6,7 +7,6 @@ from api.deps import SessionDep, CurrentUser
 from models.common import Message
 from models.poll import Poll, PollOption
 from models.vote import Vote, VoteCreateRequest
-from utils.current_bst_time import current_bst_time
 
 
 router = APIRouter()
@@ -26,10 +26,10 @@ def vote(request: VoteCreateRequest, user: CurrentUser, session: SessionDep):
         ):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="You are not authorized to vote in this poll")
-    if poll.start_time.astimezone(current_bst_time().tzinfo) > current_bst_time():
+    if poll.start_time > datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Poll not started yet")
-    if poll.end_time.astimezone(current_bst_time().tzinfo) < current_bst_time():
+    if poll.end_time < datetime.now(timezone.utc):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Poll has ended")
 
