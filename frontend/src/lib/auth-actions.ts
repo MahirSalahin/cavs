@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/utils/supabase/server";
 import { supabase } from "@/services/supabaseClient";
 import { cookies } from "next/headers";
+import { axios } from "./axios";
+import { UserType } from "@/types";
 
 
 
@@ -28,7 +30,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options:{
-      redirectTo: 'https://cavs.vercel.app//auth/callback'
+      redirectTo: 'https://cavs.vercel.app/auth/callback'
     }
   });
 
@@ -59,11 +61,16 @@ export async function getUser() {
   // const supabase = createClient();
   const cookie = cookies()
   const access_token = cookie.get('access_token')?.value
-  const { data, error } = await supabase.auth.getUser(access_token);
-  if (error) {
-    console.log(error);
-    // redirect("/error");
+  const res = await axios<UserType>('/api/v1/users/current', {
+    method: 'GET',
+    headers: {
+      'Authorization': `Bearer ${access_token}`
+    }
+  })
+  
+  if(res.success){
+    return res.data
   }
 
-  return data.user
+  return null;
 }

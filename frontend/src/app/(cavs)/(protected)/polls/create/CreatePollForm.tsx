@@ -16,6 +16,7 @@ import { cn } from '@/lib/utils'
 import { axios } from '@/lib/axios'
 import { useToast } from '@/hooks/use-toast'
 import { useRouter } from 'next/navigation'
+import useDebounce from '@/hooks/use-debounce'
 
 export default function MultiStepCreatePollForm() {
     const { toast } = useToast()
@@ -53,7 +54,7 @@ export default function MultiStepCreatePollForm() {
         name: 'id_pairs',
     })
 
-    const onSubmit = async (values: z.infer<typeof CreatePollSchema>) => {
+    const onSubmit = useDebounce(async (values: z.infer<typeof CreatePollSchema>) => {
         const access_token = localStorage.getItem('access_token')
         setIsLoading(true)
         form.setValue('options', options)
@@ -114,8 +115,8 @@ export default function MultiStepCreatePollForm() {
                     description: "Failed to create poll!",
                 })
             })
-        setIsLoading(false)
-    }
+            .finally(() => setIsLoading(false))
+    }, 300)
 
     const nextStep = () => {
         if (currentStep < 4) setCurrentStep(currentStep + 1)

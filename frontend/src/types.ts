@@ -25,3 +25,11 @@ export interface RollRangesType {
     start: number
     end: number
 }
+
+export interface UserType {
+    id: string
+    email: string
+    full_name: string
+    roll: number
+    avatar_url: string
+}

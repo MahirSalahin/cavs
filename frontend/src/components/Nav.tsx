@@ -5,16 +5,16 @@ import React, { useEffect } from 'react'
 import { LinkButton } from './ui/linkButton'
 import { getUser, signout } from '@/lib/auth-actions'
 import AnimatedText from './AnimatedText'
-import { User } from '@supabase/supabase-js'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Avatar } from './ui/avatar'
 import { useRouter } from 'next/navigation'
 import { Plus } from 'lucide-react'
 import Image from 'next/image'
+import { UserType } from '@/types'
 
 export default function Nav() {
     const [isMounted, setIsMounted] = React.useState(false)
-    const [user, setUser] = React.useState<User | null>(null)
+    const [user, setUser] = React.useState<UserType | null>(null)
     const router = useRouter()
 
     useEffect(() => {
@@ -43,8 +43,8 @@ export default function Nav() {
                                 <DropdownMenuTrigger asChild>
                                     <Avatar className="size-6 sm:size-8 cursor-pointer">
                                         <Image
-                                            src={user.user_metadata.avatar_url}
-                                            alt={user.user_metadata.full_name}
+                                            src={user.avatar_url}
+                                            alt={user.full_name}
                                             width={32}
                                             height={32}
                                             className="rounded-full"

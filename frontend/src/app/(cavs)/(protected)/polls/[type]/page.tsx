@@ -162,8 +162,7 @@ import { Input } from '@/components/ui/input'
 import useDebounce from '@/hooks/use-debounce'
 import { getUser } from '@/lib/auth-actions'
 import { axios } from '@/lib/axios'
-import { PollType } from '@/types'
-import { User } from '@supabase/supabase-js'
+import { PollType, UserType } from '@/types'
 import { notFound, useParams, usePathname, useSearchParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
@@ -180,7 +179,7 @@ export default function PollsPage() {
 
   const [polls, setPolls] = useState<PollType[]>([])
   const [totalPoll, setTotalPoll] = useState<number>(0)
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UserType | null>(null)
   const [searchValue, setSearchValue] = useState(searchParams.get('search') || '')  // Initial value from query params
   const [isLoading, setIsLoading] = useState(true)
 

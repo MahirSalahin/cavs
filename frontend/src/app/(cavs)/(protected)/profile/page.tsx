@@ -19,11 +19,11 @@ export default async function ProfilePage() {
       <Card>
         <CardHeader className="flex flex-row items-center gap-4">
           <Avatar className="h-20 w-20">
-            <AvatarImage src={user.user_metadata.avatar_url} alt={user.user_metadata.full_name} />
-            <AvatarFallback>{user.user_metadata.full_name.charAt(0)}</AvatarFallback>
+            <AvatarImage src={user.avatar_url} alt={user.full_name} />
+            <AvatarFallback>{user.full_name.charAt(0)}</AvatarFallback>
           </Avatar>
           <div>
-            <CardTitle className="text-2xl">{user.user_metadata.full_name}</CardTitle>
+            <CardTitle className="text-2xl">{user.full_name}</CardTitle>
             <p className="text-sm text-muted-foreground">{user.email}</p>
           </div>
         </CardHeader>

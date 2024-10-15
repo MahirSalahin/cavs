@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
-import { PollType } from "@/types"
+import { PollType, UserType } from "@/types"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 import CountDown from './CountDown'
 import { Button } from './ui/button'
@@ -10,12 +10,12 @@ import { Users, Trash2 } from 'lucide-react'
 import { axios } from '@/lib/axios'
 import AlertModel from './modal/AlertModel'
 import { useToast } from '@/hooks/use-toast'
-import { User } from '@supabase/supabase-js'
+import { format } from 'date-fns'
 
 interface PollCardProps {
     poll: PollType
     updatePollsAfterDelete: (pollId: string) => void
-    user: User | null
+    user: UserType | null
 }
 
 export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCardProps) {
@@ -100,7 +100,7 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                     </span>
 
                     <div>
-                        Created at <span>{new Date(poll.created_at).toLocaleDateString()}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                        Created at <span>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
                     </div>
                 </CardFooter>
             </Card>

@@ -1,24 +1,32 @@
 import { useRef, useEffect, useCallback } from 'react';
 
-const useDebounce = (func: () => void, wait: number = 1000) => {
-    const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+function useDebounce<Args extends unknown[]>(
+  func: (...args: Args) => void,
+  wait: number = 1000
+) {
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-    const debouncedFunc = useCallback(() => {
-        if (timeoutRef.current !== null) {
-            clearTimeout(timeoutRef.current);
-        }
-        timeoutRef.current = setTimeout(func, wait)
-    }, [wait, func])
+  const debouncedFunc = useCallback(
+    (...args: Args) => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
+      timeoutRef.current = setTimeout(() => {
+        func(...args);
+      }, wait);
+    },
+    [func, wait]
+  );
 
-    useEffect(() => {
-        return () => {
-            if (timeoutRef.current !== null) {
-                clearTimeout(timeoutRef.current);
-            }
-        }
-    }, [wait])
+  useEffect(() => {
+    return () => {
+      if (timeoutRef.current !== null) {
+        clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [wait]);
 
-    return debouncedFunc
+  return debouncedFunc;
 }
 
 export default useDebounce;

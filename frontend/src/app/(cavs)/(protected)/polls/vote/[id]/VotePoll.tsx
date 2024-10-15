@@ -15,6 +15,8 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { Info, Users } from "lucide-react"
 import { OptionType, PollType } from "@/types"
 import CountDown from "@/components/CountDown"
+import useDebounce from "@/hooks/use-debounce"
+import {format} from 'date-fns'
 
 interface PollResultType {
     data: {
@@ -26,7 +28,7 @@ interface PollResultType {
     total_votes: number
 }
 
-export default function VotePoll({poll_id}: {poll_id: string}) {
+export default function VotePoll({ poll_id }: { poll_id: string }) {
     const { toast } = useToast()
     const [poll, setPoll] = useState<PollType>()
     const [pollOptions, setPollOptions] = useState<OptionType[]>([])
@@ -39,7 +41,7 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
 
 
     const handleOptionClick = (optionId: string) => {
-        if(poll?.selected_option) return;
+        if (poll?.selected_option) return;
         setSelectedOption(optionId)
     }
 
@@ -89,7 +91,7 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
         setIsLoading(false)
     }
 
-    const handlePollSubmit = async () => {
+    const handlePollSubmit = useDebounce(async () => {
         setSubmitting(true)
         const access_token = localStorage.getItem('access_token')
         const res = await axios<{ message: string }>(`/api/v1/votes/vote`, {
@@ -115,7 +117,7 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
             })
         }
         setSubmitting(false)
-    }
+    }, 100)
 
     useEffect(() => {
         getPoll()
@@ -187,23 +189,23 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
                                                         <span>{option.votesPercentage}% <span className="text-xs text-muted-foreground">({option.votes})</span></span>
                                                     </div>
                                                 ))
-                                                    :
-                                                    pollOptions.map((option, index) => (
-                                                        <div
-                                                            key={index}
-                                                            className={cn(
-                                                                "flex items-center justify-between mb-4 cursor-pointer select-none transition border p-3 rounded-md",
-                                                                poll.selected_option ? "" : "hover:border-foreground",
-                                                                option.id === selectedOption ? "border-foreground" : ""
-                                                            )}
-                                                            onClick={() => handleOptionClick(option.id)}
-                                                        >
-                                                            <div className="flex items-center space-x-2">
-                                                                <RadioGroupItem value={option.id} id={option.id} />
-                                                                <span>{option.option_text}</span>
-                                                            </div>
+                                                :
+                                                pollOptions.map((option, index) => (
+                                                    <div
+                                                        key={index}
+                                                        className={cn(
+                                                            "flex items-center justify-between mb-4 cursor-pointer select-none transition border p-3 rounded-md",
+                                                            poll.selected_option ? "" : "hover:border-foreground",
+                                                            option.id === selectedOption ? "border-foreground" : ""
+                                                        )}
+                                                        onClick={() => handleOptionClick(option.id)}
+                                                    >
+                                                        <div className="flex items-center space-x-2">
+                                                            <RadioGroupItem value={option.id} id={option.id} />
+                                                            <span>{option.option_text}</span>
                                                         </div>
-                                                    ))
+                                                    </div>
+                                                ))
                                     }
                                 </RadioGroup>
                             </CardContent>
@@ -225,7 +227,7 @@ export default function VotePoll({poll_id}: {poll_id: string}) {
                                 </span>
 
                                 <div>
-                                    Created at <span>{new Date(poll.created_at).toLocaleDateString()}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                                    Created at <span>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
                                 </div>
                             </CardFooter>
                         </Card>
