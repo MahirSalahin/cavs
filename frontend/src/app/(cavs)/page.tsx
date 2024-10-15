@@ -8,10 +8,14 @@ export default async function HomePage() {
     <section className="flex justify-center items-center flex-col text-center container">
       <FadeDown>
         <h1 className="bg-gradient-to-br dark:from-white from-black from-30% dark:to-white/40 to-black/40 bg-clip-text py-6 text-5xl font-medium text-center leading-none tracking-tighter text-transparent text-balance sm:text-6xl md:text-7xl lg:text-8xl">
-          Have Your Say, the Anonymous Way!<br className="hidden md:block" />
-          CUET Anonymous Voting System- <span><AnimatedText text='CAVS' className='text -7xl sm:text-6xl md:text-7xl lg:text-8xl' /></span>
+          Have Your Say,<br/> The Anonymous Way!<br/>
         </h1>
       </FadeDown>
+      <FadeUp>
+        <h2  className="bg-gradient-to-br dark:from-white from-black from-30% dark:to-white/40 to-black/40 bg-clip-text py-6 text-4xl font-medium text-center leading-none tracking-tighter text-transparent text-balance sm:text-5xl md:text-6xl lg:text-7xl">
+          Welcome to CUET Anonymous Voting System, <span><AnimatedText text='CAVS' className='text-5xl sm:text-6xl md:text-7xl lg:text-8xl' /></span>
+        </h2>
+      </FadeUp>
 
       <FadeUp delay={0.3}>
         <p className="mb-12 text-lg tracking-tight text-gray-400 md:text-xl text-balance">
