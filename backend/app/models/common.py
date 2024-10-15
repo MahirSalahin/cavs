@@ -9,3 +9,4 @@ class AuthUser(BaseModel):
     email: EmailStr
     full_name: str
     roll: int
+    avatar_url: str = None

@@ -43,6 +43,7 @@ def get_current_user(session: SessionDep, token: TokenDep):
             full_name=" ".join(payload.get(
                 "user_metadata").get("full_name").split()[:2]),
             roll=payload.get("email")[1:8],
+            avatar_url=payload.get("user_metadata").get("avatar_url")
         )
 
     except jwt.ExpiredSignatureError:
