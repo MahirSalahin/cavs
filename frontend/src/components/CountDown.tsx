@@ -9,7 +9,6 @@ export default function CountDown({ start, end }: { start: Date, end: Date }) {
     const [countdownDate, setCountdownDate] = React.useState<Date | null>(null)
     const [message, setMessage] = React.useState<string>('')
 
-    const now = new Date();
     useEffect(() => {
         const interval = setInterval(() => {
             const currentTime = new Date();
@@ -34,12 +33,14 @@ export default function CountDown({ start, end }: { start: Date, end: Date }) {
 
     if (!isMounted || !message) return null;
 
+    const now = new Date();
 
     return (
         <div className='flex flex-col jusce gap-2 items-start mb-4'>
             <Badge className='text-[10px]'>{message}</Badge>
             {countdownDate && now <= end &&
                 <Countdown
+                    key={countdownDate.getTime()}
                     date={countdownDate}
                     renderer={renderer}
                 />}
@@ -55,7 +56,7 @@ const renderer: CountdownRendererFn = ({ days, hours, minutes, seconds, complete
     return (
         <div className='flex mx-auto w-full rounded-md text-white gap-2'>
             {
-                [[days, 'Days'], [hours, 'Hours'], [minutes, 'Minutes'], [seconds, 'seconds']].map((time, i) => (
+                [[days, 'Days'], [hours, 'Hours'], [minutes, 'Minutes'], [seconds, 'Seconds']].map((time, i) => (
                     <div key={i} className='flex gap-2'>
                         <div className='flex flex-col justify-end items-center gap-1'>
                             <span className='text-sm'>{time[0]}</span>
