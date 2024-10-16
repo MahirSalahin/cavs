@@ -23,17 +23,17 @@ export default function MultiStepCreatePollForm() {
     const router = useRouter()
     const [currentStep, setCurrentStep] = useState(1)
     const [isLoading, setIsLoading] = useState<boolean>(false)
-    const [options, setOptions] = useState<string[]>(['1', '2'])
+    const [options, setOptions] = useState<string[]>(['Option 1', 'Option 2'])
     const [isSubmitted, setIsSubmitted] = useState(false)
 
     const form = useForm<z.infer<typeof CreatePollSchema>>({
         resolver: zodResolver(CreatePollSchema),
         defaultValues: {
-            title: 'Another test poll',
-            description: 'Sample Description',
+            title: 'Poll Title',
+            description: 'Poll Description',
             start_time: new Date(),
             end_time: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            id_pairs: [{ start_id: 2104099, end_id: 2104132 }],
+            id_pairs: [{ start_id: 2104001, end_id: 2104132 }],
             options: options,
             is_private: true,
         },
@@ -98,7 +98,7 @@ export default function MultiStepCreatePollForm() {
                             if (res.success) {
                                 setIsSubmitted(true)
                                 setIsLoading(false)
-                                setTimeout(() => router.push('/polls/all'), 500)
+                                setTimeout(() => router.push('/polls/all'), 300)
                                 toast({
                                     title: "Success ✅",
                                     description: "Poll is created successfully!",
@@ -253,7 +253,7 @@ export default function MultiStepCreatePollForm() {
                                         </Card>
                                     ))}
 
-                                    <Button type='button' onClick={() => append({ start_id: 1901001, end_id: 1901001 })} disabled={isLoading} variant='outline' className='flex items-center gap-2'>
+                                    <Button type='button' onClick={() => append({ start_id: 2104001, end_id: 2104132 })} disabled={isLoading} variant='outline' className='flex items-center gap-2'>
                                         Add Student ID Range
                                         <PlusIcon size={16} />
                                     </Button>
