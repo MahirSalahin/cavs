@@ -74,7 +74,7 @@ export default function MultiStepCreatePollForm() {
         }).then((pollResponse) => {
             console.log({ pllRes: pollResponse })
             if (pollResponse.success && pollResponse?.data) {
-                axios<{ message: string }>(`/api/v1/polls/${pollResponse?.data?.poll_id}/options/`, {
+                axios<{ message: string }>(`/api/v1/polls/${pollResponse?.data?.poll_id}/options`, {
                     method: 'POST',
                     headers: {
                         Authorization: `Bearer ${access_token}`

@@ -48,7 +48,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
     const getPoll = async () => {
         setIsLoading(true)
         const access_token = localStorage.getItem('access_token')
-        const res = await axios<PollType>(`/api/v1/polls/${poll_id}/`, {
+        const res = await axios<PollType>(`/api/v1/polls/${poll_id}`, {
             method: 'GET',
             headers: {
                 'Authorization': `Bearer ${access_token}`

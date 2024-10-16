@@ -236,7 +236,7 @@ def get_ended_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit
     return polls
 
 
-@ router.post("/create/", response_model=PollCreateResponse)
+@ router.post("/create", response_model=PollCreateResponse)
 def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     """Create a new poll."""
     poll = Poll(
@@ -254,7 +254,7 @@ def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     return PollCreateResponse(poll_id=poll.id)
 
 
-@ router.get("/{poll_id}/", response_model=PollResponse)
+@ router.get("/{poll_id}", response_model=PollResponse)
 def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get a poll by its ID."""
     poll_with_votes = session.exec(
@@ -284,7 +284,7 @@ def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return _serialize_poll_public(poll, total_votes, selected_option)
 
 
-@ router.delete("/{poll_id}/", response_model=Message)
+@ router.delete("/{poll_id}", response_model=Message)
 def delete_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Delete a poll by its ID."""
     poll = session.get(Poll, poll_id)
@@ -300,7 +300,7 @@ def delete_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return Message(message="Poll deleted successfully")
 
 
-@ router.get("/{poll_id}/options/", response_model=PollOptions)
+@ router.get("/{poll_id}/options", response_model=PollOptions)
 def get_poll_options(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get all options of a poll by its ID."""
     poll = session.get(Poll, poll_id)
@@ -315,7 +315,7 @@ def get_poll_options(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return PollOptions(data=poll.options, count=len(poll.options))
 
 
-@ router.get("/{poll_id}/roll-ranges/", response_model=RollRanges)
+@ router.get("/{poll_id}/roll-ranges", response_model=RollRanges)
 def get_roll_ranges(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get all roll ranges of a poll by its ID."""
     poll = session.get(Poll, poll_id)
@@ -330,7 +330,7 @@ def get_roll_ranges(poll_id: UUID, user: CurrentUser, session: SessionDep):
     return RollRanges(data=poll.roll_ranges, count=len(poll.roll_ranges))
 
 
-@ router.post("/{poll_id}/options/", response_model=Message)
+@ router.post("/{poll_id}/options", response_model=Message)
 def create_poll_option(poll_id: UUID, request: PollOptionsCreate, user: CurrentUser, session: SessionDep):
     """Create new poll options of a poll with poll_id."""
     poll = session.get(Poll, poll_id)
