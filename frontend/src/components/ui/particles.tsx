@@ -258,15 +258,15 @@ const Particles: React.FC<ParticlesProps> = ({
     return () => {
       window.removeEventListener("resize", initCanvas);
     };
-  }, [color, animate, initCanvas]);
+  }, [color,]);
 
   useEffect(() => {
     onMouseMove();
-  }, [mousePosition.x, mousePosition.y, onMouseMove]);
+  }, [mousePosition.x, mousePosition.y]);
 
   useEffect(() => {
     initCanvas();
-  }, [refresh, initCanvas]);
+  }, [refresh]);
 
   return (
     <div className={className} ref={canvasContainerRef} aria-hidden="true">
