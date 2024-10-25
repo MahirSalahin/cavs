@@ -13,7 +13,6 @@ alembic = "^1.13.3"
 pydantic-settings = "^2.5.2"
 psycopg2-binary = "^2.9.9"
 sqlmodel = "^0.0.22"
-pytz = "^2024.2"
 python-dotenv = "^1.0.1"
 pydantic = {extras = ["email"], version = "^2.9.2"}
 pyjwt = "^2.9.0"

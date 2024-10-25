@@ -1,10 +1,12 @@
 import uuid
 from uuid import UUID
-from datetime import datetime
+from datetime import datetime, timezone, timedelta
 from pydantic import BaseModel
 from sqlmodel import SQLModel, Field, Relationship
+from typing import TYPE_CHECKING, Optional
 
-from utils.current_bst_time import current_bst_time
+if TYPE_CHECKING:
+    from models.vote import Vote
 
 
 class RollRange(SQLModel, table=True):
@@ -20,9 +22,8 @@ class RollRanges(BaseModel):
     count: int
 
 
-class RollRangeCreate(BaseModel):
-    start: int | None = Field(default=1901001)
-    end: int | None = Field(default=2313180)
+class RollRangesCreate(BaseModel):
+    roll_ranges: list[tuple[int, int]]
 
 
 class Poll(SQLModel, table=True):
@@ -30,10 +31,16 @@ class Poll(SQLModel, table=True):
     title: str = Field(max_length=255)
     description: str = Field(max_length=1024)
     is_private: bool = Field(default=False)
-    created_at: datetime = Field(default_factory=current_bst_time)
+    created_at: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
     creator_email: str = Field(max_length=255)
-    start_time: datetime = Field(default_factory=current_bst_time)
-    end_time: datetime
+    start_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc)
+    )
+    end_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+    )
     options: list["PollOption"] = Relationship(
         back_populates="poll", cascade_delete=True)
     roll_ranges: list["RollRange"] = Relationship(
@@ -44,11 +51,18 @@ class PollCreate(BaseModel):
     title: str = Field(max_length=255)
     description: str | None = Field(max_length=1024)
     is_private: bool = Field(default=False)
-    start_time: datetime = Field(default_factory=current_bst_time)
-    end_time: datetime
+    start_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc))
+    end_time: datetime = Field(
+        default_factory=lambda: datetime.now(timezone.utc) + timedelta(days=1)
+    )
 
 
-class PollPublic(BaseModel):
+class PollCreateResponse(BaseModel):
+    poll_id: UUID
+
+
+class PollResponse(BaseModel):
     id: UUID
     title: str
     description: str
@@ -57,12 +71,14 @@ class PollPublic(BaseModel):
     created_at: datetime
     start_time: datetime
     end_time: datetime
-    options: list["PollOption"]
     roll_ranges: list[RollRange]
+    options: list["PollOption"]
+    selected_option: Optional["PollOption"]
+    total_votes: int
 
 
-class PollsPublic(BaseModel):
-    data: list[PollPublic]
+class PollsResponse(BaseModel):
+    data: list[PollResponse]
     count: int
 
 
@@ -71,7 +87,8 @@ class PollOption(SQLModel, table=True):
     poll_id: UUID = Field(foreign_key="poll.id", ondelete="CASCADE")
     option_text: str = Field(max_length=255)
     poll: Poll = Relationship(back_populates="options")
-    votes: int = Field(default=0)
+    votes: list["Vote"] = Relationship(
+        back_populates="poll_option", cascade_delete=True)
 
 
 class PollOptions(BaseModel):
@@ -79,8 +96,8 @@ class PollOptions(BaseModel):
     count: int
 
 
-class PollOptionCreate(BaseModel):
-    option_text: str
+class PollOptionsCreate(BaseModel):
+    option_texts: list[str]
 
 
 class PollOptionResult(BaseModel):

@@ -3,7 +3,7 @@
 ## Overview
 
 ***CAVS*** is a web application designed to facilitate anonymous voting of polls for the CUETians.Users can create and participate in polls without revealing their identities, though they must use a CUET-email to sign-in into the system. This email will only be used for verification purpose only, the *email_hash*(encrypted with SHA256) will be stored in the database, thus maintaining the anonymity for voting. But The poll-creator's email will not be shown to maintain authenticity and keep the system clean from any unusual activities.\
-The backend is built by using FastAPI and SQLModel, while the frontend utilizes React, Tailwind CSS, and Framer Motion.
+The backend is built by using FastAPI and SQLModel, while the frontend utilizes Next.js, Tailwind CSS, and Framer Motion.
 
 ## Features
 
