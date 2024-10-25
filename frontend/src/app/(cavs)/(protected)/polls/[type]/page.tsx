@@ -244,13 +244,13 @@ export default function PollsPage() {
       router.push(pathname)
     }
     else debouncedFun()
-  }, [searchValue, debouncedFun])
+  }, [searchValue]);
 
   useEffect(() => {
     if (!pollsFilterType.includes(params?.type)) return notFound();
     getUser()
       .then(res => setUser(res))
-  }, [params?.type])
+  }, [])
 
   useEffect(() => {
     if (!pollsFilterType.includes(params?.type)) return notFound();
@@ -259,7 +259,7 @@ export default function PollsPage() {
     return () => {
       setPolls([])
     }
-  }, [skip, setSkip, params?.type, getPolls])
+  }, [skip, setSkip])
 
   useEffect(() => {
     if (!pollsFilterType.includes(params?.type)) return notFound();
@@ -269,7 +269,7 @@ export default function PollsPage() {
     return () => {
       setPolls([])
     }
-  }, [searchParams.get('search'),  params?.type, getPolls])
+  }, [searchParams.get('search')])
 
   return (
     <>
