@@ -120,7 +120,7 @@ def get_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int 
 
 
 @ router.get("/public", response_model=PollsResponse)
-def get_public_polls(session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
+def get_public_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
     """Get all public polls."""
     polls = _get_polls(
         user=None,
