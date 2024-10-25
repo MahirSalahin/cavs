@@ -149,25 +149,25 @@ def get_my_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: i
     return polls
 
 
-@ router.get("/allowed-polls", response_model=PollsResponse)
-def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
-    """Get all polls allowed for the user."""
-    polls = _get_polls(
-        user=user,
-        session=session,
-        skip=skip,
-        limit=limit,
-        search=search,
-        where_clause=or_(
-            Poll.is_private.is_(False),
-            Poll.creator_email == user.email,
-            Poll.roll_ranges.any(
-                and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
-            )
-        ),
-        order_by_clause=Poll.created_at.desc()
-    )
-    return polls
+# @ router.get("/allowed-polls", response_model=PollsResponse)
+# def get_allowed_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
+#     """Get all polls allowed for the user."""
+#     polls = _get_polls(
+#         user=user,
+#         session=session,
+#         skip=skip,
+#         limit=limit,
+#         search=search,
+#         where_clause=or_(
+#             Poll.is_private.is_(False),
+#             Poll.creator_email == user.email,
+#             Poll.roll_ranges.any(
+#                 and_(RollRange.start <= user.roll, RollRange.end >= user.roll)
+#             )
+#         ),
+#         order_by_clause=Poll.created_at.desc()
+#     )
+#     return polls
 
 
 @ router.get("/popular-polls", response_model=PollsResponse)
@@ -201,6 +201,30 @@ def get_upcoming_polls(user: CurrentUser, session: SessionDep, skip: int = 0, li
         search=search,
         where_clause=and_(
             Poll.start_time > datetime.now(timezone.utc),
+            or_(
+                Poll.is_private.is_(False),
+                Poll.creator_email == user.email,
+                Poll.roll_ranges.any(
+                    and_(RollRange.start <= user.roll, RollRange.end >= user.roll))
+            )
+        ),
+        order_by_clause=Poll.start_time.asc()
+    )
+    return polls
+
+
+@ router.get("/ongoing-polls", response_model=PollsResponse)
+def get_ongoing_polls(user: CurrentUser, session: SessionDep, skip: int = 0, limit: int = 20, search: str = None):
+    """Get all ongoing polls."""
+    polls = _get_polls(
+        user=user,
+        session=session,
+        skip=skip,
+        limit=limit,
+        search=search,
+        where_clause=and_(
+            Poll.start_time <= datetime.now(timezone.utc),
+            Poll.end_time >= datetime.now(timezone.utc),
             or_(
                 Poll.is_private.is_(False),
                 Poll.creator_email == user.email,
