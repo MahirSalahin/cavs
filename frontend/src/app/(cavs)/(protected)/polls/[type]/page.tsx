@@ -163,6 +163,7 @@ import useDebounce from '@/hooks/use-debounce'
 import { getUser } from '@/lib/auth-actions'
 import { axios } from '@/lib/axios'
 import { PollType, UserType } from '@/types'
+import { Search } from 'lucide-react'
 import { notFound, useParams, usePathname, useSearchParams, useRouter } from 'next/navigation'
 import React, { useEffect, useState } from 'react'
 
@@ -274,16 +275,20 @@ export default function PollsPage() {
     <>
       <div className="min-h-screen text-white p-8 container space-y-6 max-w-[800px]">
         <div className="w-full mx-auto">
-          <Input
-            type="search"
-            placeholder="Search Polls"
-            value={searchValue}
-            onChange={(e) => {
-              let value = e.target.value
-              if (value == ' ') value = ''
-              setSearchValue(value)
-            }}
-          />
+          <div className="relative">
+            <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+            <Input
+              type="search"
+              placeholder="Search Polls"
+              value={searchValue}
+              className="pl-8 pr-4 bg-background"
+              onChange={(e) => {
+                let value = e.target.value
+                if (value == ' ') value = ''
+                setSearchValue(value)
+              }}
+            />
+          </div>
         </div>
         <Filter />
 

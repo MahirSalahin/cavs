@@ -13,7 +13,7 @@ export default function SupabaseLogin() {
         <div className='p-4 z-10 max-w-[600px] w-full'>
             <Card className='!w-full'>
                 <CardHeader>
-                    <AnimatedText text='CAVS' className='text-[90px]' />
+                    <AnimatedText text='CAVS' className='md:text-[90px] md:leading-[90px] text-[50px] leading-[50px]' />
                     <CardTitle className='text-xl text-center'>Welcome, please join to continue</CardTitle>
                 </CardHeader>
                 <CardContent>

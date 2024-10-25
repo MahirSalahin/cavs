@@ -119,8 +119,16 @@ export default function MultiStepCreatePollForm() {
             })
     }, 300)
 
-    const nextStep = () => {
-        if (currentStep < 4) setCurrentStep(currentStep + 1)
+    const nextStep = async () => {
+        const isValid = await form.trigger(); // Validate current step
+        if (isValid) {
+            setCurrentStep(currentStep + 1);  // Move to next step if valid
+        } else {
+            toast({
+                title: "🚫 Validation Error",
+                description: "Please fill in all required fields before proceeding.",
+            });
+        }
     }
 
     const prevStep = () => {
@@ -214,15 +222,20 @@ export default function MultiStepCreatePollForm() {
                                 <>
                                     {fields.map((field, index) => (
                                         <Card key={field.id}>
-                                            {fields.length > 1 && <CardHeader className='items-end p-0 pt-4 pr-4'>
-                                                <Button onClick={() => remove(index)} variant='secondary' size='icon' className='rounded-full' >
-                                                    <XIcon size={16} />
-                                                </Button>
-                                            </CardHeader>}
                                             <CardContent className={cn(
-                                                "grid sm:grid-cols-2 gap-4",
-                                                index == 0 && 'pt-2'
+                                                "grid sm:grid-cols-2 gap-4 relative",
+                                                'pt-4'
                                             )}>
+                                                {fields.length > 1 ?
+                                                    <Button
+                                                        onClick={() => remove(index)}
+                                                        variant='link'
+                                                        size='icon'
+                                                        className='absolute right-0 top-0'
+                                                    >
+                                                        <XIcon size={16} />
+                                                    </Button>
+                                                    : null}
                                                 <FormField
                                                     control={form.control}
                                                     name={`id_pairs.${index}.start_id`}
@@ -266,7 +279,7 @@ export default function MultiStepCreatePollForm() {
 
                         {currentStep === 3 && (
                             <Card>
-                                <CardContent className='space-y-4 mt-3'>
+                                <CardContent className='space-y-6 mt-3'>
                                     {options.map((option, index) => (
                                         <FormField
                                             key={index}

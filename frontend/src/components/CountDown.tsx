@@ -54,7 +54,7 @@ const renderer: CountdownRendererFn = ({ days, hours, minutes, seconds, complete
     }
 
     return (
-        <div className='flex mx-auto w-full rounded-md text-white gap-2'>
+        <div className='flex mx-auto w-full rounded-md gap-2'>
             {
                 [[days, 'Days'], [hours, 'Hours'], [minutes, 'Minutes'], [seconds, 'Seconds']].map((time, i) => (
                     <div key={i} className='flex gap-2'>

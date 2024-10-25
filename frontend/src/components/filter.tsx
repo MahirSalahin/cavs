@@ -5,10 +5,18 @@ import React from 'react'
 import { cn } from '@/lib/utils'
 import { LinkButton } from './ui/linkButton'
 
-export const pollsFilterType = ['all', 'public', 'my-polls', 'allowed-polls', 'popular-polls', 'upcoming-polls', 'ended-polls']
+export const pollsFilterType = [
+    'all',
+    'public',
+    'my-polls',
+    'ongoing-polls',
+    'upcoming-polls',
+    'ended-polls',
+    'popular-polls',
+]
 
 export default function Filter() {
-    const params : {type:string} = useParams()
+    const params: { type: string } = useParams()
 
     const selectedValue = params?.type
 
@@ -20,9 +28,10 @@ export default function Filter() {
                     <div key={filter} className='flex items-center'>
                         <LinkButton
                             href={`/polls/${filter}`}
+                            size='sm'
                             variant={
                                 (filter == selectedValue) || (selectedValue == null && filter == 'all')
-                                    ? 'secondary' : 'outline'
+                                    ? 'default' : 'outline'
                             }
                             className={cn(
                                 'capitalize',

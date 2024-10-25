@@ -1,5 +1,6 @@
 
 import Nav from "@/components/Nav";
+import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export default function RootLayout({
   children,
@@ -8,8 +9,15 @@ export default function RootLayout({
 }>) {
   return (
     <>
-      <Nav />
-      {children}
+      <ThemeProvider
+        attribute="class"
+        defaultTheme="system"
+        enableSystem
+        disableTransitionOnChange
+      >
+        <Nav />
+        {children}
+      </ThemeProvider>
     </>
   );
 }

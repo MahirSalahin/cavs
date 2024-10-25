@@ -81,7 +81,7 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                             </Button>
                         }
                     </div>
-                    <p className="text-sm text-gray-400">{poll.description}</p>
+                    <p className="text-sm text-accent-foreground/70">{poll.description}</p>
                 </CardHeader>
                 <CardContent>
                     <CountDown start={new Date(poll.start_time)} end={new Date(poll.end_time)} />
@@ -99,8 +99,10 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                         {poll.total_votes} Votes
                     </span>
 
-                    <div>
-                        Created at <span>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                    <div className='text-right'>
+                        Created by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                        <br />
+                        <time className='text-[11px]'>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</time>
                     </div>
                 </CardFooter>
             </Card>

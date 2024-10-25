@@ -12,7 +12,7 @@ const AnimatedText = ({ text, className = '' }: { text: string, className?: stri
                     key={index}
                     className={cn(
                         "inline-block animate-pulse-left-to-right",
-                        "bg-gradient-to-r from-white via-white to-white",
+                        "bg-gradient-to-r from-foreground via-foreground to-foreground",
                         "text-transparent bg-clip-text"
                     )}
                     style={{

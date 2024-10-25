@@ -104,8 +104,9 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
             }
         })
 
+        setOpen(false)
         if (res.success) {
-            setTimeout(() => router.push('/polls/all'), 1000)
+            setTimeout(() => router.push('/polls/all'), 200)
             toast({
                 title: "Success ✅",
                 description: "Vote submitted successfully!",
@@ -118,6 +119,8 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
         }
         setSubmitting(false)
     }, 100)
+
+    const debounceHandlePllSubmit = useDebounce(handlePollSubmit, 300)
 
     useEffect(() => {
         getPoll()
@@ -134,7 +137,10 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                 description='Are you sure you want to vote this option?'
                 onClose={() => setOpen(false)}
                 isLoading={submitting}
-                onConfirm={handlePollSubmit}
+                onConfirm={()=>{
+                    setSubmitting(true)
+                    debounceHandlePllSubmit()
+                }}
             />
             <div className="container h-full">
                 {

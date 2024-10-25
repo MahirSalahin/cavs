@@ -2,8 +2,13 @@ import { LinkButton } from '@/components/ui/linkButton';
 import { ArrowRight } from 'lucide-react';
 import { FadeDown, FadeUp } from '@/components/Animation';
 import AnimatedText from '@/components/AnimatedText';
+import { supabase } from '@/services/supabaseClient';
+import { getUser } from '@/lib/auth-actions';
 
 export default async function HomePage() {
+  const user = await getUser();
+  console.log({user});
+
   return (
     <section className="flex justify-center items-center flex-col text-center container">
       <FadeDown>
