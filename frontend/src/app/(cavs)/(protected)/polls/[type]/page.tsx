@@ -273,7 +273,7 @@ export default function PollsPage() {
 
   return (
     <>
-      <div className="min-h-screen text-white p-8 container space-y-6 max-w-[800px]">
+      <div className="min-h-screen p-8 container space-y-6 max-w-[800px]">
         <div className="w-full mx-auto">
           <div className="relative">
             <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
