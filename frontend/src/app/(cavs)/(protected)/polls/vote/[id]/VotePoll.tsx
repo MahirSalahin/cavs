@@ -125,7 +125,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
     useEffect(() => {
         getPoll()
         getPollResult()
-    }, [getPoll, getPollResult])
+    }, [])
 
     if (!poll) return null;
 
