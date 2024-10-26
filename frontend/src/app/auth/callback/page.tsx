@@ -6,16 +6,19 @@ import { useRouter } from 'next/navigation'
 import { IconLoadingSpinner } from '@/components/IconLoadingSpinner';
 import { axios } from '@/lib/axios';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
+import { UserType } from '@/types';
 
-interface CurrentUserType {
-    email: string,
-    full_name: string,
-    roll: number
-}
+// interface CurrentUserType {
+//     email: string,
+//     full_name: string,
+//     roll: number
+// }
 
 export default function AuthCallback() {
     const router = useRouter();
     const {toast} = useToast()
+    const { onLogin}= useAuth()
 
     useEffect(() => {
         const getToken = async () => {
@@ -27,7 +30,7 @@ export default function AuthCallback() {
                 const refreshToken = params.get('refresh_token');
                 const expiresIn = params.get('expires_in');
 
-                axios<CurrentUserType>('/api/v1/users/current', {
+                axios<UserType>('/api/v1/users/current', {
                     method: 'GET',
                     headers: {
                         Authorization: `Bearer ${accessToken}`
@@ -43,8 +46,14 @@ export default function AuthCallback() {
                                 localStorage.setItem('access_token', accessToken);
                                 localStorage.setItem('refresh_token', refreshToken);
 
+                                toast({
+                                    title: '✅ Sign In',
+                                    description: 'You have been successfully signed in.',
+                                })
+
                                 // Optionally, you can store the expiration time
                                 if (expiresIn) localStorage.setItem('expires_in', expiresIn);
+                                onLogin(res.data)
 
                                 // Remove the hash from the URL
                                 router.replace('/login', undefined);

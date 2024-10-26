@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { getUser } from '@/lib/auth-actions'
+import { cookies } from 'next/headers'
 
 export async function updateSession(request: NextRequest) {
     // console.log("Middleware invoking 🔥")
+
+    const isPublicRoute = ['/', '/terms', '/privacy'].includes(request.nextUrl.pathname)
 
     const supabaseResponse = NextResponse.next({
         request,
     })
 
-    const user = await getUser()
+    const cookie = cookies()
+    const user = cookie.get('access_token')?.value;
 
-    if (request.nextUrl.pathname == '/' ||
+    if (isPublicRoute ||
         request.nextUrl.pathname == '/auth/callback'
         // || request.nextUrl.pathname.startsWith('/polls')
     ) {

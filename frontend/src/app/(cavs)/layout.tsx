@@ -1,5 +1,5 @@
 
-import Nav from "@/components/Nav";
+import Layout from "@/components/Layout";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 
 export default function RootLayout({
@@ -15,13 +15,10 @@ export default function RootLayout({
         enableSystem
         disableTransitionOnChange
       >
-        <div className="flex flex-col min-h-screen">
-          <Nav />
-          <main className="flex-1">
-            {children}
-          </main>
-        </div>
-      </ThemeProvider>
+        <Layout>
+          {children}
+        </Layout>
+      </ThemeProvider >
     </>
   );
 }
