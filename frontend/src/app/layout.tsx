@@ -29,6 +29,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
+      <head>
+        <meta name="google-site-verification" content="2puST9D4IY0aSMTqKo74F3kMx64XltTo7lUXhCsUE48" />
+      </head>
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
@@ -49,11 +52,11 @@ export default function RootLayout({
         </div>
         <Toaster />
         {/* <ThemeProvider> */}
-          <NextTopLoader
-            showSpinner={false}
-            color="#4646d7"
-          />
-          {children}
+        <NextTopLoader
+          showSpinner={false}
+          color="#4646d7"
+        />
+        {children}
         {/* </ThemeProvider> */}
       </body>
     </html>
