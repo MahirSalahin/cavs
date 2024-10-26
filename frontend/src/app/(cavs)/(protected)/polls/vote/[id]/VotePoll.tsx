@@ -16,7 +16,8 @@ import { Info, Users } from "lucide-react"
 import { OptionType, PollType } from "@/types"
 import CountDown from "@/components/CountDown"
 import useDebounce from "@/hooks/use-debounce"
-import {format} from 'date-fns'
+import { format } from 'date-fns'
+import { Skeleton } from "@/components/ui/skeleton"
 
 interface PollResultType {
     data: {
@@ -41,7 +42,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
 
 
     const handleOptionClick = (optionId: string) => {
-        if (poll?.selected_option || (poll && new Date(poll.start_time)>=new Date())) return;
+        if (poll?.selected_option || (poll && new Date(poll.start_time) >= new Date())) return;
         setSelectedOption(optionId)
     }
 
@@ -83,7 +84,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
             const totalVotes = res.data.total_votes
             const updatedData = res.data.data.map((option: { option_text: string, votes: number }) => ({
                 ...option,
-                votesPercentage: totalVotes ? (option.votes / totalVotes) * 100 : 0,
+                votesPercentage: totalVotes ? parseFloat(((option.votes / totalVotes) * 100).toFixed(2)) : 0,
                 isWinner: option.votes === Math.max(...res.data.data.map((opt: { votes: number }) => opt.votes))
             }))
             setPollResult({ ...res.data, data: updatedData })
@@ -127,7 +128,8 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
         getPollResult()
     }, [])
 
-    if (!poll) return null;
+
+    // if (!poll) return null;
 
     return (
         <>
@@ -137,7 +139,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                 description='Are you sure you want to vote this option?'
                 onClose={() => setOpen(false)}
                 isLoading={submitting}
-                onConfirm={()=>{
+                onConfirm={() => {
                     setSubmitting(true)
                     debounceHandlePllSubmit()
                 }}
@@ -160,83 +162,103 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                         className="border bg-background md:shadow-xl p-0.5 max-w-[600px] w-full mt-12"
                         color={["#A07CFE", "#3364e0", "#9513d6"]}
                     >
-                        <Card className="bg-transparent border-none w-full z-10">
-                            <CardHeader>
-                                <CardTitle className="text-2xl">{poll.title}</CardTitle>
-                                <p className="text-sm text-gray-400">{poll.description}</p>
-                            </CardHeader>
-                            <CardContent>
-                                <div>
-                                    <CountDown start={new Date(poll.start_time)} end={new Date(poll.end_time)} />
-                                </div>
-                                <RadioGroup value={selectedOption}>
-                                    {
-                                        isLoading ?
-                                            [1, 2].map((option) => (
-                                                <div
-                                                    key={option}
-                                                    className=" mb-4 bg-muted/60 border animate-pulse h-10 rounded-md"
+                        {
+                            !isLoading ?
+                                (poll ?
+                                    <Card className="bg-transparent border-none w-full z-10">
+                                        <CardHeader>
+                                            <CardTitle className="text-2xl">{poll.title}</CardTitle>
+                                            <p className="text-sm text-gray-400">{poll.description}</p>
+                                        </CardHeader>
+                                        <CardContent>
+                                            <div>
+                                                <CountDown start={new Date(poll.start_time)} end={new Date(poll.end_time)} />
+                                            </div>
+                                            <RadioGroup value={selectedOption}>
+                                                {
+                                                    pollResult ?
+                                                        pollResult.data.map((option, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className={cn(
+                                                                    "flex items-center justify-between mb-4 select-none transition border p-3 rounded-md",
+                                                                    option.isWinner && option.votes ? "border-green-500 bg-green-500/10" : ""
+                                                                )}
+                                                            >
+                                                                <div className="flex items-center space-x-2">
+                                                                    <span>{option.option_text}</span>
+                                                                </div>
+                                                                <span>{option.votesPercentage}% <span className="text-xs text-muted-foreground">({option.votes})</span></span>
+                                                            </div>
+                                                        ))
+                                                        :
+                                                        pollOptions.map((option, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className={cn(
+                                                                    "flex items-center justify-between mb-4 cursor-pointer select-none transition border p-3 rounded-md",
+                                                                    poll.selected_option || new Date(poll.start_time) >= new Date() ? "" : "hover:border-foreground",
+                                                                    option.id === selectedOption ? "border-foreground" : ""
+                                                                )}
+                                                                onClick={() => handleOptionClick(option.id)}
+                                                            >
+                                                                <div className="flex items-center space-x-2">
+                                                                    <RadioGroupItem value={option.id} id={option.id} />
+                                                                    <span>{option.option_text}</span>
+                                                                </div>
+                                                            </div>
+                                                        ))
+                                                }
+                                            </RadioGroup>
+                                        </CardContent>
+                                        {!isLoading && !pollResult && !poll.selected_option && new Date(poll.start_time) < new Date() &&
+                                            <CardFooter>
+                                                <Button
+                                                    variant='outline'
+                                                    className="w-full cursor-pointer"
+                                                    onClick={() => setOpen(true)}
+                                                    disabled={!selectedOption || isLoading}
                                                 >
-                                                </div>
-                                            ))
-                                            :
-                                            pollResult ?
-                                                pollResult.data.map((option, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className={cn(
-                                                            "flex items-center justify-between mb-4 select-none transition border p-3 rounded-md",
-                                                            option.isWinner && option.votes ? "border-green-500 bg-green-500/10" : ""
-                                                        )}
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <span>{option.option_text}</span>
-                                                        </div>
-                                                        <span>{option.votesPercentage}% <span className="text-xs text-muted-foreground">({option.votes})</span></span>
-                                                    </div>
-                                                ))
-                                                :
-                                                pollOptions.map((option, index) => (
-                                                    <div
-                                                        key={index}
-                                                        className={cn(
-                                                            "flex items-center justify-between mb-4 cursor-pointer select-none transition border p-3 rounded-md",
-                                                            poll.selected_option || new Date(poll.start_time)>=new Date() ? "" : "hover:border-foreground",
-                                                            option.id === selectedOption ? "border-foreground" : ""
-                                                        )}
-                                                        onClick={() => handleOptionClick(option.id)}
-                                                    >
-                                                        <div className="flex items-center space-x-2">
-                                                            <RadioGroupItem value={option.id} id={option.id} />
-                                                            <span>{option.option_text}</span>
-                                                        </div>
-                                                    </div>
-                                                ))
-                                    }
-                                </RadioGroup>
-                            </CardContent>
-                            {!isLoading && !pollResult && !poll.selected_option && new Date(poll.start_time)<new Date() &&
-                                <CardFooter>
-                                    <Button
-                                        variant='outline'
-                                        className="w-full cursor-pointer"
-                                        onClick={() => setOpen(true)}
-                                        disabled={!selectedOption || isLoading}
-                                    >
-                                        Submit
-                                    </Button>
-                                </CardFooter>}
-                            <CardFooter className='flex items-center justify-between text-muted-foreground text-xs'>
-                                <span className='flex items-center'>
-                                    <Users size={12} className="inline mr-2" />
-                                    {poll.total_votes} Votes
-                                </span>
+                                                    Submit
+                                                </Button>
+                                            </CardFooter>}
+                                        <CardFooter className='flex items-center justify-between text-muted-foreground text-xs'>
+                                            <span className='flex items-center'>
+                                                <Users size={12} className="inline mr-2" />
+                                                {poll.total_votes} Votes
+                                            </span>
 
-                                <div>
-                                    Created at <span>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
-                                </div>
-                            </CardFooter>
-                        </Card>
+                                            <div className='text-right'>
+                                                Created by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                                                <br />
+                                                <time className='text-[11px]'>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</time>
+                                            </div>
+                                        </CardFooter>
+                                    </Card>
+                                    :
+                                    null
+                                )
+                                :
+                                <Card className="bg-transparent border-none w-full z-10">
+                                    <CardHeader>
+                                        <Skeleton className="h-7 w-1/2" />
+                                        <Skeleton className="h-7 w-3/4" />
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        {/* <Skeleton className="h-12 w-1/3" /> */}
+                                        <div className="space-y-4">
+                                            <Skeleton className="h-10 border" />
+                                            <Skeleton className="h-10 border" />
+                                            <Skeleton className="h-10 border" />
+                                        </div>
+                                    </CardContent>
+                                    <CardFooter className='flex items-center justify-between text-muted-foreground text-xs'>
+
+                                        <Skeleton className="h-4 w-1/4" />
+                                        <Skeleton className="h-4 w-1/4" />
+                                    </CardFooter>
+                                </Card>
+                        }
                     </ShineBorder>
                 </FadeUp>
             </div>

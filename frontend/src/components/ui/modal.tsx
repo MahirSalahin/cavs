@@ -14,16 +14,18 @@ export default function Modal({ title, description, isOpen, onClose, children }:
         if (!open) onClose();
     }
     return (
-        <Dialog open={isOpen} onOpenChange={onChange}>
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>{title}</DialogTitle>
-                    <DialogDescription>{description}</DialogDescription>
-                </DialogHeader>
-                <div>
-                    {children}
-                </div>
-            </DialogContent>
-        </Dialog>
+        <div className='p-'>
+            <Dialog open={isOpen} onOpenChange={onChange}>
+                <DialogContent className='!p-4'>
+                    <DialogHeader>
+                        <DialogTitle>{title}</DialogTitle>
+                        <DialogDescription>{description}</DialogDescription>
+                    </DialogHeader>
+                    <div>
+                        {children}
+                    </div>
+                </DialogContent>
+            </Dialog>
+        </div>
     )
 }

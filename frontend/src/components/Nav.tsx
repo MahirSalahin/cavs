@@ -54,10 +54,10 @@ export default function Nav() {
                                         <DropdownMenuItem
                                             onClick={async () => {
                                                 onOpen()
+                                                onLogout()
                                                 signout()
-                                                    .then(() => {
-                                                        onLogout()
-                                                        onClose()
+                                                .then(async () => {
+                                                    onClose()
                                                         toast({
                                                             title: '✅ Signed Out',
                                                             description: 'You have been successfully signed out.',
