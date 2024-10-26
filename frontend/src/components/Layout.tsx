@@ -3,7 +3,7 @@
 import React, { useState } from 'react'
 import Nav from './Nav'
 import { useAuth } from '@/hooks/use-auth'
-import { getUser } from '@/lib/auth-actions'
+import { clearCookies, getUser } from '@/lib/auth-actions'
 import { useLoadingOverlay } from '@/hooks/use-loading-overlay'
 import LoadingOverlayProvider from '@/providers/loading-overlay-provider'
 import Link from 'next/link'
@@ -19,8 +19,12 @@ export default function Layout({ children }: { children: React.ReactNode }) {
         setIsLoading(true)
         if (!user) {
             const res = await getUser()
-            if (res?.email) onLogin(res)
-            else onLogout()
+            console.log(res)
+            if (res) onLogin(res)
+                else{
+                await clearCookies()
+                onLogout()
+            }
         }
         setIsLoading(false)
         onClose()
@@ -43,8 +47,8 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                         <div className='container py-1 flex items-center justify-between'>
                             <p className='text-sm'>&copy; {new Date().getFullYear()} CAVS</p>
                             <div className='flex items-center gap-3'>
-                                <Link href='/privacy' className='text-xs underline'>Privacy Policy</Link>
-                                <Link href='/terms' className='text-xs underline'>Terms and Condition</Link>
+                                <Link href='/privacy' className='text-xs underline cursor-pointer'>Privacy Policy</Link>
+                                <Link href='/terms' className='text-xs underline cursor-pointer'>Terms and Condition</Link>
                             </div>
                         </div>
                     </footer>

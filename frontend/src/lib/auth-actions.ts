@@ -9,12 +9,15 @@ import { axios } from "./axios";
 import { UserType } from "@/types";
 
 
+export async function clearCookies() {
+  const cookie = cookies()
+  cookie.delete('access_token');
+  cookie.delete('refresh_token');
+}
 
 export async function signout() {
   const supabase = createClient();
-  const cookie = cookies()
-  cookie.delete('access_token')
-  cookie.delete('refresh_token')
+  await clearCookies();
   const { error } = await supabase.auth.signOut();
   if (error) {
     console.log(error);

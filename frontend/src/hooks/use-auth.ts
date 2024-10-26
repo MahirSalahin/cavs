@@ -1,3 +1,4 @@
+import { clearCookies } from '@/lib/auth-actions';
 import { UserType } from '@/types';
 import {create} from 'zustand';
 
@@ -10,7 +11,8 @@ interface useStoreAuthInterface {
 export const useAuth = create<useStoreAuthInterface>((set) => ({
     user: null,
     onLogin: (user:UserType) => set({ user: user }),
-    onLogout: () => {
+    onLogout: async () => {
+        await clearCookies()
         localStorage.clear()
         set({ user:null })
     }

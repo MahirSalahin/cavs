@@ -43,6 +43,7 @@ export const axios = async <T>(url: string, options: Axios2Options = {}): Promis
         };
     } catch (error) {
         if (error instanceof AxiosError && error.response) {
+            console.log(error.status)
             return {
                 success: false,
                 message: error.response.data.detail,
