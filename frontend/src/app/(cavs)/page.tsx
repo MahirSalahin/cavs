@@ -93,7 +93,7 @@ export default function HomePage() {
 
             <motion.p
               key="description"
-              variants={{...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: {...contentFadeVariants.visible.transition, delay: user ? .5 : 1.5} }}}
+              variants={{ ...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: { ...contentFadeVariants.visible.transition, delay: user ? .5 : 1.5 } } }}
               initial="hidden"
               animate="visible"
               className="mb-12 text-lg tracking-tight text-accent-foreground md:text-xl text-balance"
@@ -104,13 +104,17 @@ export default function HomePage() {
 
             <motion.div
               key="button"
-              variants={{...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: {...contentFadeVariants.visible.transition, delay: user ? 1 : 2} }}}
+              variants={{ ...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: { ...contentFadeVariants.visible.transition, delay: user ? 1 : 2 } } }}
               initial="hidden"
               animate="visible"
+              className="flex flex-col items-center"
             >
               <LinkButton className="flex items-center gap-1" href="/polls/all">
                 Get Started <ArrowRight size={16} />
               </LinkButton>
+              <p className="mt-2 text-sm text-gray-500 text-center">
+                By getting started, you agree to our <a href="/terms" className="underline">Terms</a> and have read our <a href="/privacy" className="underline">Privacy Policy</a>.
+              </p>
             </motion.div>
           </>
         )}
