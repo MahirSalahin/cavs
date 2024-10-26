@@ -84,7 +84,7 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
             const totalVotes = res.data.total_votes
             const updatedData = res.data.data.map((option: { option_text: string, votes: number }) => ({
                 ...option,
-                votesPercentage: totalVotes ? (option.votes / totalVotes) * 100 : 0,
+                votesPercentage: totalVotes ? parseFloat(((option.votes / totalVotes) * 100).toFixed(2)) : 0,
                 isWinner: option.votes === Math.max(...res.data.data.map((opt: { votes: number }) => opt.votes))
             }))
             setPollResult({ ...res.data, data: updatedData })
