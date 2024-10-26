@@ -1,5 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth-actions'
 import { cookies } from 'next/headers'
 
 export async function updateSession(request: NextRequest) {
