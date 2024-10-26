@@ -228,8 +228,10 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                                                 {poll.total_votes} Votes
                                             </span>
 
-                                            <div>
-                                                Created at <span>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</span> by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                                            <div className='text-right'>
+                                                Created by <span className='font-semibold'>{poll.creator_email.split('@')[0].substring(1)}</span>
+                                                <br />
+                                                <time className='text-[11px]'>{format(poll.created_at, 'MM/dd/yyyy hh:mm a')}</time>
                                             </div>
                                         </CardFooter>
                                     </Card>

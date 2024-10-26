@@ -58,7 +58,7 @@ export default function PrivacyPolicy() {
           <Accordion type="single" collapsible className="w-full">
             {sections.map((section, index) => (
               <AccordionItem key={index} value={`item-${index}`}>
-                <AccordionTrigger className="text-lg font-semibold text-foreground">{section.title}</AccordionTrigger>
+                <AccordionTrigger className="text-lg text-left font-semibold text-foreground">{section.title}</AccordionTrigger>
                 <AccordionContent>
                   <p className="text-muted-foreground whitespace-pre-line">{section.content}</p>
                 </AccordionContent>
