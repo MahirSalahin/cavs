@@ -56,8 +56,8 @@ export default function AuthCallback() {
                                 onLogin(res.data)
 
                                 // Remove the hash from the URL
-                                const callbackUrl = params.get('callback_url') || '/';
-                                console.log({callbackUrl})
+                                const callbackUrl = params.get('callback') || '/';
+                                console.log({callbackUrl, params})
                                 router.replace(callbackUrl, undefined);
                             }
                         }
