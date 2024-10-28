@@ -55,14 +55,14 @@ export default function HomePage() {
     visible: {
       opacity: 1,
       filter: "blur(0)",
-      transition: { ease: "easeInOut", duration: 1, delay: user ? 0 : 1 }
+      transition: { ease: "easeInOut", duration: 1, delay: 0 }
     }
   }
 
   if (!mounted) return null;
 
   return (
-    <section className="flex justify-center items-center flex-col text-center container h-full">
+    <section className="flex justify-center items-center flex-col text-center container max-h-[calc(100vh-90px)] h-full">
       <AnimatePresence mode="wait">
         {!user && showWelcome && (
           <motion.h1
@@ -76,9 +76,9 @@ export default function HomePage() {
             Welcome to CUET Anonymous Voting System, <span><AnimatedText text='CAVS' className='text-5xl sm:text-6xl md:text-7xl lg:text-8xl' /></span>
           </motion.h1>
         )}
-      </AnimatePresence>
+      {/* </AnimatePresence>
 
-      <AnimatePresence mode="wait">
+      <AnimatePresence> */}
         {showContent && (
           <>
             <motion.h1
@@ -93,7 +93,7 @@ export default function HomePage() {
 
             <motion.p
               key="description"
-              variants={{ ...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: { ...contentFadeVariants.visible.transition, delay: user ? .5 : 1.5 } } }}
+              variants={{...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: {...contentFadeVariants.visible.transition, delay: .3} }}}
               initial="hidden"
               animate="visible"
               className="mb-12 text-lg tracking-tight text-accent-foreground md:text-xl text-balance"
@@ -104,17 +104,13 @@ export default function HomePage() {
 
             <motion.div
               key="button"
-              variants={{ ...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: { ...contentFadeVariants.visible.transition, delay: user ? 1 : 2 } } }}
+              variants={{...contentFadeVariants, visible: { ...contentFadeVariants.visible, transition: {...contentFadeVariants.visible.transition, delay: .6} }}}
               initial="hidden"
               animate="visible"
-              className="flex flex-col items-center"
             >
               <LinkButton className="flex items-center gap-1" href="/polls/all">
                 Get Started <ArrowRight size={16} />
               </LinkButton>
-              <p className="mt-2 text-sm text-gray-500 text-center">
-                By getting started, you agree to our <a href="/terms" className="underline">Terms</a> and have read our <a href="/privacy" className="underline">Privacy Policy</a>.
-              </p>
             </motion.div>
           </>
         )}

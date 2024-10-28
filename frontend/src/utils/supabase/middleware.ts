@@ -4,36 +4,28 @@ import { cookies } from 'next/headers'
 export async function updateSession(request: NextRequest) {
     // console.log("Middleware invoking 🔥")
 
-    const isPublicRoute = ['/', '/terms', '/privacy'].includes(request.nextUrl.pathname)
+    const isPublicRoute = ['/', '/terms', '/privacy', '/auth/callback'].includes(request.nextUrl.pathname)
+    const isAuthRoute = ['/login'].includes(request.nextUrl.pathname)
+    const DEFAUTL_UNAUTH_REDIRECT='/login'
+    const cookie = cookies()
+    const isLoggedIn = cookie.get('access_token')?.value;
 
     const supabaseResponse = NextResponse.next({
         request,
     })
 
-    const cookie = cookies()
-    const user = cookie.get('access_token')?.value;
 
-    if (isPublicRoute ||
-        request.nextUrl.pathname == '/auth/callback'
-        // || request.nextUrl.pathname.startsWith('/polls')
-    ) {
-        return;
-    }
-
-    if (user && request.nextUrl.pathname.startsWith('/login')) {
+    if (isLoggedIn && isAuthRoute) {
         const url = request.nextUrl.clone()
         url.pathname = '/'
         return NextResponse.redirect(url)
     }
 
-    if (
-        !user &&
-        !request.nextUrl.pathname.startsWith('/login')
-    ) {
-        // no user, potentially respond by redirecting the user to the login page
-        const url = request.nextUrl.clone()
-        url.pathname = '/login'
-        return NextResponse.redirect(url)
+    if (!isLoggedIn && !isPublicRoute) {
+        let callback = request.nextUrl.pathname
+        if(request.nextUrl.search) callback += request.nextUrl.search
+        const encodedCallback = encodeURIComponent(callback)
+        return Response.redirect(new URL(`${DEFAUTL_UNAUTH_REDIRECT}?callback=${encodedCallback}`, request.nextUrl))
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
