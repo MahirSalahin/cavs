@@ -1,6 +1,6 @@
 "use server";
 
-import { type ReadonlyURLSearchParams, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
 import { supabase } from "@/services/supabaseClient";
@@ -28,12 +28,12 @@ export async function signout() {
   redirect("/");
 }
 
-export async function signInWithGoogle(searchParams:ReadonlyURLSearchParams) {
+export async function signInWithGoogle(callback:string) {
   // const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback?${searchParams}`,
+      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback?callback=${callback}`,
     }
   });
 
