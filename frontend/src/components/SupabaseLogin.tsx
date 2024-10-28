@@ -25,7 +25,7 @@ export default function SupabaseLogin() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <form
-                        action={(e) => {
+                        action={() => {
                             signInWithGoogle(searchParams);
                         }}
                         className="space-y-4"

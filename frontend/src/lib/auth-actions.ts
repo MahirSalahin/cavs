@@ -1,6 +1,6 @@
 "use server";
 
-import { redirect } from "next/navigation";
+import { type ReadonlyURLSearchParams, redirect } from "next/navigation";
 
 import { createClient } from "@/utils/supabase/server";
 import { supabase } from "@/services/supabaseClient";
@@ -28,7 +28,7 @@ export async function signout() {
   redirect("/");
 }
 
-export async function signInWithGoogle(searchParams:string) {
+export async function signInWithGoogle(searchParams:ReadonlyURLSearchParams) {
   // const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
