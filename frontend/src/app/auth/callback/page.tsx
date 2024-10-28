@@ -16,7 +16,7 @@ export default function AuthCallback() {
 
     useEffect(() => {
         const getToken = async () => {
-            const url = window.location.href;
+            // const url = window.location.href;
 
             // Extract query params (before #)
             const urlParams = new URLSearchParams(window.location.search);
