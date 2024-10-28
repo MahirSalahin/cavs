@@ -9,19 +9,20 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { UserType } from '@/types';
 
-// interface CurrentUserType {
-//     email: string,
-//     full_name: string,
-//     roll: number
-// }
-
 export default function AuthCallback() {
     const router = useRouter();
-    const {toast} = useToast()
-    const { onLogin}= useAuth()
+    const { toast } = useToast();
+    const { onLogin } = useAuth();
 
     useEffect(() => {
         const getToken = async () => {
+            const url = window.location.href;
+
+            // Extract query params (before #)
+            const urlParams = new URLSearchParams(window.location.search);
+            const callbackUrl = urlParams.get('callback') || '/';
+
+            // Extract hash params (after #)
             const hash = window.location.hash;
             if (hash) {
                 const params = new URLSearchParams(hash.substring(1)); // Remove the # at the start
@@ -30,51 +31,54 @@ export default function AuthCallback() {
                 const refreshToken = params.get('refresh_token');
                 const expiresIn = params.get('expires_in');
 
-                axios<UserType>('/api/v1/users/current', {
-                    method: 'GET',
-                    headers: {
-                        Authorization: `Bearer ${accessToken}`
-                    }
-                })
-                    .then(async (res) => {
-                        console.log(res);
+                if (accessToken) {
+                    try {
+                        const res = await axios<UserType>('/api/v1/users/current', {
+                            method: 'GET',
+                            headers: {
+                                Authorization: `Bearer ${accessToken}`
+                            }
+                        });
+
                         if (res.success) {
                             if (accessToken && refreshToken) {
-                                // console.log("Just got the tokens", { accessToken, refreshToken, expiresIn });
                                 await setCookeis(accessToken, refreshToken);
+                                
                                 // Save tokens to localStorage or cookies
                                 localStorage.setItem('access_token', accessToken);
                                 localStorage.setItem('refresh_token', refreshToken);
+                                if (expiresIn) localStorage.setItem('expires_in', expiresIn);
 
                                 toast({
                                     title: '✅ Sign In',
                                     description: 'You have been successfully signed in.',
-                                })
+                                });
 
-                                // Optionally, you can store the expiration time
-                                if (expiresIn) localStorage.setItem('expires_in', expiresIn);
-                                onLogin(res.data)
-
-                                // Remove the hash from the URL
-                                const callbackUrl = params.get('callback') || '/';
-                                console.log({callbackUrl, params})
-                                router.replace(callbackUrl, undefined);
+                                // Handle login and redirect
+                                onLogin(res.data);
+                                router.replace(callbackUrl);
                             }
-                        }
-                        else{
+                        } else {
                             toast({
                                 title: 'Error ❌',
                                 description: res.message,
-                            })
+                            });
                             router.push('/login');
                         }
-                    })
-
+                    } catch (error) {
+                        console.error("Error during authentication:", error);
+                        toast({
+                            title: 'Error ❌',
+                            description: 'Failed to authenticate user.',
+                        });
+                        router.push('/login');
+                    }
+                }
             }
         }
 
-        getToken()
-    }, [router, toast]);
+        getToken();
+    }, [router, toast, onLogin]);
 
     return (
         <section className='flex flex-col items-center justify-center h-screen'>
