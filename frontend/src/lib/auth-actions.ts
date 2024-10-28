@@ -28,7 +28,7 @@ export async function signout() {
   redirect("/");
 }
 
-export async function signInWithGoogle(searchParams:any) {
+export async function signInWithGoogle(searchParams:string) {
   // const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
