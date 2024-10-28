@@ -15,6 +15,7 @@ import { useSearchParams } from 'next/navigation'
 export default function SupabaseLogin() {
     const [acceptedTerms, setAcceptedTerms] = useState(false)
     const searchParams = useSearchParams()
+    console.log({callback: searchParams.get('callback')})
 
     return (
         <div className='p-4 z-10 max-w-[600px] w-full'>
@@ -26,7 +27,7 @@ export default function SupabaseLogin() {
                 <CardContent className="space-y-4">
                     <form
                         action={() => {
-                            signInWithGoogle(searchParams.get('callback')!);
+                            signInWithGoogle(searchParams.get('callback') ?? '/');
                         }}
                         className="space-y-4"
                     >

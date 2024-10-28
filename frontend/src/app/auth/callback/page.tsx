@@ -17,11 +17,11 @@ export default function AuthCallback() {
     useEffect(() => {
         const getToken = async () => {
             // const url = window.location.href;
-
+            
             // Extract query params (before #)
             const urlParams = new URLSearchParams(window.location.search);
-            const callbackUrl = urlParams.get('callback') || '/';
-
+            const callbackUrl = urlParams.get('callback');
+            
             // Extract hash params (after #)
             const hash = window.location.hash;
             if (hash) {
@@ -56,7 +56,7 @@ export default function AuthCallback() {
 
                                 // Handle login and redirect
                                 onLogin(res.data);
-                                router.replace(callbackUrl);
+                                router.push(callbackUrl ?? '/');
                             }
                         } else {
                             toast({
