@@ -26,12 +26,13 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                 onLogout()
             }
         }
-        setIsLoading(false)
         onClose()
+        setIsLoading(false)
     }
 
     React.useEffect(() => {
         getCurrentUser()
+        .finally(() =>onClose())
     }, [])
 
     return (

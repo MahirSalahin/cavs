@@ -21,11 +21,12 @@ export async function updateSession(request: NextRequest) {
         return NextResponse.redirect(url)
     }
 
-    if (!isLoggedIn && !isPublicRoute) {
+    if (!isLoggedIn && !isPublicRoute && !isAuthRoute) {
         let callback = request.nextUrl.pathname
         if(request.nextUrl.search) callback += request.nextUrl.search
+        console.log({callback})
         const encodedCallback = encodeURIComponent(callback)
-        return Response.redirect(new URL(`${DEFAUTL_UNAUTH_REDIRECT}?callback=${encodedCallback}`, request.nextUrl))
+        return Response.redirect(new URL(`/login?callback=${encodedCallback}`, request.nextUrl))
     }
 
     // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
