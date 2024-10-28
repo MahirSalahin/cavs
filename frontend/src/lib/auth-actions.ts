@@ -28,12 +28,12 @@ export async function signout() {
   redirect("/");
 }
 
-export async function signInWithGoogle() {
+export async function signInWithGoogle(searchParams:any) {
   // const supabase = createClient();
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback`
+      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback?${searchParams}`,
     }
   });
 

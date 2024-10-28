@@ -10,9 +10,11 @@ import { Checkbox } from "./ui/checkbox"
 import { Label } from "./ui/label"
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
+import { useSearchParams } from 'next/navigation'
 
 export default function SupabaseLogin() {
     const [acceptedTerms, setAcceptedTerms] = useState(false)
+    const searchParams = useSearchParams()
 
     return (
         <div className='p-4 z-10 max-w-[600px] w-full'>
@@ -23,7 +25,9 @@ export default function SupabaseLogin() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <form
-                        action={signInWithGoogle}
+                        action={(e) => {
+                            signInWithGoogle(searchParams);
+                        }}
                         className="space-y-4"
                     >
                         <div className="flex items-center space-x-2">
