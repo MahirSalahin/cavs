@@ -6,7 +6,7 @@ export async function updateSession(request: NextRequest) {
 
     const isPublicRoute = ['/', '/terms', '/privacy', '/auth/callback'].includes(request.nextUrl.pathname)
     const isAuthRoute = ['/login'].includes(request.nextUrl.pathname)
-    const DEFAUTL_UNAUTH_REDIRECT='/login'
+    // const DEFAUTL_UNAUTH_REDIRECT='/login'
     const cookie = cookies()
     const isLoggedIn = cookie.get('access_token')?.value;
 
