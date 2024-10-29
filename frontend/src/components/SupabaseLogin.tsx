@@ -40,7 +40,7 @@ export default function SupabaseLogin() {
                             <Label htmlFor="terms" className="text-sm text-muted-foreground">
                                 I accept the {' '}
                                 <Link href="/terms" className="text-primary hover:underline">
-                                    terms and conditions
+                                    Terms and Conditions
                                 </Link>
                             </Label>
                         </div>
