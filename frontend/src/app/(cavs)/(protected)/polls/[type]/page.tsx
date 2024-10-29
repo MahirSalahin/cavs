@@ -31,7 +31,7 @@ export default function PollsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [skip, setSkip] = useState(0)
-  const limit = parseInt(searchParams.get('limit') ?? '5')
+  const limit = parseInt(searchParams.get('limit') ?? '20')
 
   const fetchPolls = useCallback(async (isNewSearch = false) => {
     const pollType = Array.isArray(params?.type) ? params.type[0] : params?.type
