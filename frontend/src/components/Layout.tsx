@@ -49,7 +49,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                             <p className='text-sm'>&copy; {new Date().getFullYear()} CAVS</p>
                             <div className='flex items-center gap-3'>
                                 <Link href='/privacy' className='text-xs underline cursor-pointer'>Privacy Policy</Link>
-                                <Link href='/terms' className='text-xs underline cursor-pointer'>Terms and Condition</Link>
+                                <Link href='/terms' className='text-xs underline cursor-pointer'>Terms and Conditions</Link>
                             </div>
                         </div>
                     </footer>
