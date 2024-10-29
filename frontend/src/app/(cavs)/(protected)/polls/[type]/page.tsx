@@ -44,7 +44,7 @@ export default function PollsPage() {
       skip: skip.toString(),
     })
 
-    let url = `/api/v1/polls/${params.type !== 'all' ? params.type : ''}?${queryParams.toString()}`
+    const url = `/api/v1/polls/${params.type !== 'all' ? params.type : ''}?${queryParams.toString()}`
 
     try {
       setIsLoading(isNewSearch)
