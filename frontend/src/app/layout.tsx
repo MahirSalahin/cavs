@@ -19,7 +19,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "CAVS",
-  description: "CUET Anonymous Voting System is the new way to build you opinion stronger.",
+  description: "CUET Anonymous Voting System: Have Your Say, the Anonymous Way!",
 };
 
 export default function RootLayout({
@@ -49,11 +49,11 @@ export default function RootLayout({
         </div>
         <Toaster />
         {/* <ThemeProvider> */}
-          <NextTopLoader
-            showSpinner={false}
-            color="#4646d7"
-          />
-          {children}
+        <NextTopLoader
+          showSpinner={false}
+          color="#4646d7"
+        />
+        {children}
         {/* </ThemeProvider> */}
       </body>
     </html>
