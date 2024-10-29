@@ -13,10 +13,10 @@ export default function PrivacyPolicy() {
           CAVS is designed to ensure that your privacy as a voter is fully protected. During your use of the system, we may collect the following information:
           <ul className="list-disc ml-6">
             <li>
-              <strong>Poll Creator's Information:</strong> The email or student ID of the poll creator will be visible to all users participating in the poll. This allows users to know who created the poll, providing transparency.
+              <strong>Poll Creator&apos;s Information:</strong> The email or student ID of the poll creator will be visible to all users participating in the poll. This allows users to know who created the poll, providing transparency.
             </li>
             <li>
-              <strong>Voter's Information:</strong> No personally identifiable information (PII) of voters is stored, shared, or made visible to poll creators or other users.
+              <strong>Voter&apos;s Information:</strong> No personally identifiable information (PII) of voters is stored, shared, or made visible to poll creators or other users.
             </li>
           </ul>
         </>
