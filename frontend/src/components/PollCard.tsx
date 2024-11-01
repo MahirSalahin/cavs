@@ -6,7 +6,7 @@ import { PollType, UserType } from "@/types"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 import CountDown from './CountDown'
 import { Button } from './ui/button'
-import { Users, Trash2 } from 'lucide-react'
+import { Users, Trash2, Share2 } from 'lucide-react'
 import { axios } from '@/lib/axios'
 import AlertModel from './modal/AlertModel'
 import { useToast } from '@/hooks/use-toast'
@@ -33,7 +33,6 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                 'Authorization': `Bearer ${access_token}`
             }
         })
-        // console.log(res)
         if (res.success) {
             toast({
                 title: "Success ✅",
@@ -51,6 +50,22 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
         setIsLoading(false)
     }
 
+    const onShare = async () => {
+        const pollUrl = `${window.location.origin}/polls/vote/${poll.id}`
+        try {
+            await navigator.clipboard.writeText(pollUrl)
+            toast({
+                title: "Copied! ✅",
+                description: "Poll url has been copied to clipboard.",
+            })
+        } catch {
+            toast({
+                title: "Error ❌",
+                description: "Failed to copy URL. Please try again.",
+            })
+        }
+    }
+
     useEffect(() => setMounted(true), [])
 
     if (!mounted) return null;
@@ -65,21 +80,32 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                 isLoading={isLoading}
                 onConfirm={onDelete}
             />
-            {/* <FadeUp delay={index * .3}> */}
             <Card className="!w-full">
                 <CardHeader>
                     <div className="flex items-center justify-between gap-4">
                         <CardTitle className="text-2xl">{poll.title}</CardTitle>
-                        {user?.email == poll.creator_email &&
+                        <div className="flex gap-2">
                             <Button
-                                onClick={() => setOpen(true)}
+                                onClick={onShare}
                                 variant='outline'
-                                className="ml-auto rounded-full"
+                                className="rounded-full"
                                 size='icon'
+                                aria-label="Share poll"
                             >
-                                <Trash2 className='text-red-500' size={16} />
+                                <Share2 size={16} />
                             </Button>
-                        }
+                            {user?.email == poll.creator_email &&
+                                <Button
+                                    onClick={() => setOpen(true)}
+                                    variant='outline'
+                                    className="rounded-full"
+                                    size='icon'
+                                    aria-label="Delete poll"
+                                >
+                                    <Trash2 className='text-red-500' size={16} />
+                                </Button>
+                            }
+                        </div>
                     </div>
                     <p className="text-sm text-accent-foreground/70">{poll.description}</p>
                 </CardHeader>
@@ -106,7 +132,6 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                     </div>
                 </CardFooter>
             </Card>
-            {/* </FadeUp > */}
         </>
     )
 }
