@@ -25,7 +25,6 @@ export default function MultiStepCreatePollForm() {
     const [isLoading, setIsLoading] = useState<boolean>(false)
     const [options, setOptions] = useState<string[]>(['Option 1', 'Option 2'])
     const [isSubmitted, setIsSubmitted] = useState(false)
-
     const form = useForm<z.infer<typeof CreatePollSchema>>({
         resolver: zodResolver(CreatePollSchema),
         defaultValues: {
@@ -40,6 +39,68 @@ export default function MultiStepCreatePollForm() {
         mode: 'onBlur',
     })
 
+    const handleSubmit = async (values: z.infer<typeof CreatePollSchema>) => {
+        const access_token = localStorage.getItem('access_token')
+        setIsLoading(true)
+        form.setValue('options', options)
+
+        try {
+            const pollResponse = await axios<{ poll_id: string }>('/api/v1/polls/create', {
+                method: 'POST',
+                headers: {
+                    Authorization: `Bearer ${access_token}`
+                },
+                data: {
+                    title: values.title,
+                    description: values.description,
+                    start_time: values.start_time,
+                    end_time: values.end_time,
+                    is_private: values.is_private,
+                }
+            })
+
+            if (pollResponse.success && pollResponse?.data) {
+                await axios<{ message: string }>(`/api/v1/polls/${pollResponse.data.poll_id}/options`, {
+                    method: 'POST',
+                    headers: {
+                        Authorization: `Bearer ${access_token}`
+                    },
+                    data: {
+                        option_texts: values.options
+                    }
+                })
+
+                if (pollResponse.success && values.is_private) {
+                    await axios<{ message: string }>(`/api/v1/polls/${pollResponse.data.poll_id}/roll-ranges`, {
+                        method: 'POST',
+                        headers: {
+                            Authorization: `Bearer ${access_token}`
+                        },
+                        data: {
+                            roll_ranges: values.id_pairs.map((pair) => ([pair.start_id, pair.end_id]))
+                        }
+                    })
+                }
+
+                setIsSubmitted(true)
+                setTimeout(() => router.push('/polls/all'), 300)
+                toast({
+                    title: "Success ✅",
+                    description: "Poll is created successfully!",
+                })
+            }
+        } catch {
+            toast({
+                title: "Error ❌",
+                description: "Something went wrong!",
+            })
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
+    const onSubmit = useDebounce(handleSubmit, 300)
+
     // Watch for changes in the form fields to reset the isSubmitted state
     const { watch } = form
     React.useEffect(() => {
@@ -53,71 +114,6 @@ export default function MultiStepCreatePollForm() {
         control: form.control,
         name: 'id_pairs',
     })
-
-    const onSubmit = useDebounce(async (values: z.infer<typeof CreatePollSchema>) => {
-        const access_token = localStorage.getItem('access_token')
-        setIsLoading(true)
-        form.setValue('options', options)
-
-        axios<{ poll_id: string }>('/api/v1/polls/create', {
-            method: 'POST',
-            headers: {
-                Authorization: `Bearer ${access_token}`
-            },
-            data: {
-                title: values.title,
-                description: values.description,
-                start_time: values.start_time,
-                end_time: values.end_time,
-                is_private: values.is_private,
-            }
-        }).then((pollResponse) => {
-            console.log({ pllRes: pollResponse })
-            if (pollResponse.success && pollResponse?.data) {
-                axios<{ message: string }>(`/api/v1/polls/${pollResponse?.data?.poll_id}/options`, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${access_token}`
-                    },
-                    data: {
-                        option_texts: values.options
-                    }
-                }).then((res) => {
-                    console.log({ optionsRes: res })
-                    if (res.success) {
-                        axios<{ message: string }>(`/api/v1/polls/${pollResponse?.data?.poll_id}/roll-ranges`, {
-                            method: 'POST',
-                            headers: {
-                                Authorization: `Bearer ${access_token}`
-                            },
-                            data: {
-                                roll_ranges: values.id_pairs.map((pair) => ([pair.start_id, pair.end_id]))
-                            }
-                        }).then((res) => {
-                            console.log({ idPairsRes: res })
-                            if (res.success) {
-                                setIsSubmitted(true)
-                                setIsLoading(false)
-                                setTimeout(() => router.push('/polls/all'), 300)
-                                toast({
-                                    title: "Success ✅",
-                                    description: "Poll is created successfully!",
-                                })
-                            } else throw new Error()
-                        })
-                    } else throw res
-                })
-            } else throw new Error()
-        })
-            .catch((err) => {
-                console.error(err)
-                setIsLoading(false)
-                toast({
-                    title: "Error ❌",
-                    description: "Failed to create poll!",
-                })
-            })
-    }, 300)
 
     const nextStep = async () => {
         const isValid = await form.trigger(); // Validate current step
