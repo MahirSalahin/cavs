@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { Trash2, Share2, Users, Info } from 'lucide-react'
+import { Trash2, Share2, Users } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import AlertModal from '@/components/modal/AlertModal'
 import { usePollActions } from '@/lib/pollUtils'
@@ -16,6 +16,7 @@ import { FadeUp } from "@/components/Animation"
 import ShineBorder from "@/components/ui/shine-border"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/utils"
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import AlertModel from "@/components/modal/AlertModal"
 import useDebounce from "@/hooks/use-debounce"
 import { format } from 'date-fns'
@@ -288,6 +289,24 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                                 </Card>
                         }
                     </ShineBorder>
+                    <Accordion type="single" collapsible className="max-w-[600px] w-full">
+                        <AccordionItem value="rollRanges">
+                            <AccordionTrigger>Allowed Voters</AccordionTrigger>
+                            <AccordionContent>
+                                {poll?.roll_ranges && poll.roll_ranges.length > 0 ? (
+                                    <div className="space-y-2">
+                                        {poll.roll_ranges.map((range) => (
+                                            <div key={range.id} className="flex justify-center p-2 border rounded-md">
+                                                {range.start} ~ {range.end}
+                                            </div>
+                                        ))}
+                                    </div>
+                                ) : (
+                                    <p>All CUETians can vote.</p>
+                                )}
+                            </AccordionContent>
+                        </AccordionItem>
+                    </Accordion>
                 </FadeUp>
             </div>
         </>
