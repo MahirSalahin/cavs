@@ -5,7 +5,7 @@ import { Button } from '../ui/button';
 import Modal from '../ui/modal';
 import { Loader2 } from 'lucide-react';
 
-interface AlertModelProps {
+interface AlertModalProps {
     isOpen: boolean;
     onClose: () => void;
     onConfirm: () => void;
@@ -14,14 +14,14 @@ interface AlertModelProps {
     description?: string;
 }
 
-export default function AlertModel({
+export default function AlertModal({
     isOpen,
     onClose,
     onConfirm,
     isLoading,
     title = "Are you sure?",
     description = "This action cannot be undone."
-}: AlertModelProps) {
+}: AlertModalProps) {
     const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {

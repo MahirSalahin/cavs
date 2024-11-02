@@ -1,20 +1,22 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Trash2, Share2, Users, Info } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import AlertModal from '@/components/modal/AlertModal'
+import { usePollActions } from '@/lib/pollUtils'
+import { useAuth } from '@/hooks/use-auth'
+import { useToast } from '@/hooks/use-toast'
+import { axios } from '@/lib/axios'
+import CountDown from '@/components/CountDown'
+import { PollType, OptionType } from '@/types'
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { FadeUp } from "@/components/Animation"
 import ShineBorder from "@/components/ui/shine-border"
-import { Button } from "@/components/ui/button"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { cn } from "@/lib/utils"
-import { axios } from "@/lib/axios"
-import { useToast } from "@/hooks/use-toast"
-import { useRouter } from "next/navigation"
-import AlertModel from "@/components/modal/AlertModel"
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Info, Users } from "lucide-react"
-import { OptionType, PollType } from "@/types"
-import CountDown from "@/components/CountDown"
+import AlertModel from "@/components/modal/AlertModal"
 import useDebounce from "@/hooks/use-debounce"
 import { format } from 'date-fns'
 import { Skeleton } from "@/components/ui/skeleton"
@@ -31,15 +33,17 @@ interface PollResultType {
 
 export default function VotePoll({ poll_id }: { poll_id: string }) {
     const { toast } = useToast()
-    const [poll, setPoll] = useState<PollType>()
+    const { user } = useAuth()
+    const [poll, setPoll] = useState<PollType | null>(null)
     const [pollOptions, setPollOptions] = useState<OptionType[]>([])
     const [pollResult, setPollResult] = useState<PollResultType | null>(null)
     const [open, setOpen] = useState(false)
+    const [openDelete, setOpenDelete] = useState(false)
     const [selectedOption, setSelectedOption] = useState<string>()
     const [isLoading, setIsLoading] = useState<boolean>(true)
     const [submitting, setSubmitting] = useState<boolean>(false)
+    const { onDelete, onShare } = usePollActions()
     const router = useRouter()
-
 
     const handleOptionClick = (optionId: string) => {
         if (poll?.selected_option || (poll && new Date(poll.start_time) >= new Date())) return;
@@ -128,8 +132,12 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
         getPollResult()
     }, [])
 
-
-    // if (!poll) return null;
+    const handleDelete = async () => {
+        setIsLoading(true)
+        await onDelete(poll_id)
+        setOpenDelete(false)
+        setIsLoading(false)
+    }
 
     return (
         <>
@@ -144,19 +152,15 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                     debounceHandlePllSubmit()
                 }}
             />
+            <AlertModal
+                isOpen={openDelete}
+                title='Delete Poll❗'
+                description='Are you sure you want to delete this poll?'
+                onClose={() => setOpenDelete(false)}
+                isLoading={isLoading}
+                onConfirm={handleDelete}
+            />
             <div className="container h-full">
-                {
-                    pollResult &&
-                    <Alert className='mt-12 max-w-xl mx-auto'>
-                        <Info className="h-4 w-4" />
-                        <AlertTitle>
-                            Published Result
-                        </AlertTitle>
-                        <AlertDescription>
-                            Total Votes: {pollResult.total_votes}
-                        </AlertDescription>
-                    </Alert>
-                }
                 <FadeUp className="w-full flex justify-center items-center flex-col">
                     <ShineBorder
                         className="border bg-background md:shadow-xl p-0.5 max-w-[600px] w-full mt-12"
@@ -167,7 +171,31 @@ export default function VotePoll({ poll_id }: { poll_id: string }) {
                                 (poll ?
                                     <Card className="bg-transparent border-none w-full z-10">
                                         <CardHeader>
-                                            <CardTitle className="text-2xl">{poll.title}</CardTitle>
+                                            <div className="flex items-center justify-between gap-4">
+                                                <CardTitle className="text-2xl">{poll.title}</CardTitle>
+                                                <div className="flex gap-2">
+                                                    <Button
+                                                        onClick={() => onShare(poll.id)}
+                                                        variant='outline'
+                                                        className="rounded-full"
+                                                        size='icon'
+                                                        aria-label="Share poll"
+                                                    >
+                                                        <Share2 size={16} />
+                                                    </Button>
+                                                    {user?.email === poll.creator_email && (
+                                                        <Button
+                                                            onClick={() => setOpenDelete(true)}
+                                                            variant='outline'
+                                                            className="rounded-full"
+                                                            size='icon'
+                                                            aria-label="Delete poll"
+                                                        >
+                                                            <Trash2 className='text-red-500' size={16} />
+                                                        </Button>
+                                                    )}
+                                                </div>
+                                            </div>
                                             <p className="text-sm text-gray-400">{poll.description}</p>
                                         </CardHeader>
                                         <CardContent>

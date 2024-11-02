@@ -7,10 +7,9 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from './ui/card'
 import CountDown from './CountDown'
 import { Button } from './ui/button'
 import { Users, Trash2, Share2 } from 'lucide-react'
-import { axios } from '@/lib/axios'
-import AlertModel from './modal/AlertModel'
-import { useToast } from '@/hooks/use-toast'
+import AlertModal from './modal/AlertModal'
 import { format } from 'date-fns'
+import { usePollActions } from '@/lib/pollUtils'
 
 interface PollCardProps {
     poll: PollType
@@ -22,48 +21,13 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
     const [mounted, setMounted] = useState(false)
     const [open, setOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(false)
-    const { toast } = useToast()
+    const { onDelete, onShare } = usePollActions()
 
-    const onDelete = async () => {
+    const handleDelete = async () => {
         setIsLoading(true)
-        const access_token = localStorage.getItem('access_token')
-        const res = await axios<PollType>(`/api/v1/polls/${poll.id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${access_token}`
-            }
-        })
-        if (res.success) {
-            toast({
-                title: "Success ✅",
-                description: "The Poll is deleted successfully!",
-            })
-            updatePollsAfterDelete(poll.id)
-        }
-        else {
-            toast({
-                title: "Error ❌",
-                description: "Something went wrong!",
-            })
-        }
+        await onDelete(poll.id, updatePollsAfterDelete)
         setOpen(false)
         setIsLoading(false)
-    }
-
-    const onShare = async () => {
-        const pollUrl = `${window.location.origin}/polls/vote/${poll.id}`
-        try {
-            await navigator.clipboard.writeText(pollUrl)
-            toast({
-                title: "Copied! ✅",
-                description: "Poll url has been copied to clipboard.",
-            })
-        } catch {
-            toast({
-                title: "Error ❌",
-                description: "Failed to copy URL. Please try again.",
-            })
-        }
     }
 
     useEffect(() => setMounted(true), [])
@@ -72,13 +36,13 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
 
     return (
         <>
-            <AlertModel
+            <AlertModal
                 isOpen={open}
-                title='Delete Poll'
+                title='Delete Poll❗'
                 description='Are you sure you want to delete this poll?'
                 onClose={() => setOpen(false)}
                 isLoading={isLoading}
-                onConfirm={onDelete}
+                onConfirm={handleDelete}
             />
             <Card className="!w-full">
                 <CardHeader>
@@ -86,7 +50,7 @@ export default function PollCard({ poll, user, updatePollsAfterDelete }: PollCar
                         <CardTitle className="text-2xl">{poll.title}</CardTitle>
                         <div className="flex gap-2">
                             <Button
-                                onClick={onShare}
+                                onClick={() => onShare(poll.id)}
                                 variant='outline'
                                 className="rounded-full"
                                 size='icon'
