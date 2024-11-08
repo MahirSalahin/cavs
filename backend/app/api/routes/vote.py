@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from fastapi import APIRouter, HTTPException, status
-from sqlmodel import select, and_
+from sqlalchemy.exc import IntegrityError
 
 from core.security import hash_email
 from api.deps import SessionDep, CurrentUser
@@ -33,24 +33,18 @@ def vote(request: VoteCreateRequest, user: CurrentUser, session: SessionDep):
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="Poll has ended")
 
-    if session.exec(
-            select(Vote)
-            .join(PollOption)
-            .where(
-                and_(
-                    Vote.voter_email_hash == voter_email_hash,
-                    PollOption.poll_id == poll.id
-                )
-            )
-    ).first():
+    try:
+        vote = Vote(
+            option_id=request.option_id,
+            poll_id=poll.id,
+            voter_email_hash=voter_email_hash
+        )
+        session.add(vote)
+        session.commit()
+        session.refresh(vote)
+    except IntegrityError:
+        session.rollback()
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST, detail="You have already voted in this poll")
 
-    vote = Vote(
-        option_id=request.option_id,
-        voter_email_hash=voter_email_hash
-    )
-    session.add(vote)
-    session.commit()
-    session.refresh(vote)
     return Message(message="Voted successfully")
