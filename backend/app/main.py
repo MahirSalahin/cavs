@@ -8,6 +8,12 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_STR}/openapi.json",
 )
 
+
+@app.get("/")
+def read_root():
+    return {"message": "Server is running"}
+
+
 if settings.BACKEND_CORS_ORIGINS:
     app.add_middleware(
         CORSMiddleware,
