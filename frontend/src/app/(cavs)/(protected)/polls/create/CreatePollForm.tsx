@@ -45,54 +45,43 @@ export default function MultiStepCreatePollForm() {
         form.setValue('options', options)
 
         try {
-            const pollResponse = await axios<{ poll_id: string }>('/api/v1/polls/create', {
+            const response = await axios<{ poll_id: string }>('/api/v1/polls/full-create', {
                 method: 'POST',
                 headers: {
                     Authorization: `Bearer ${access_token}`
                 },
                 data: {
-                    title: values.title,
-                    description: values.description,
-                    start_time: values.start_time,
-                    end_time: values.end_time,
-                    is_private: values.is_private,
+                    request: {
+                        title: values.title,
+                        description: values.description,
+                        start_time: values.start_time,
+                        end_time: values.end_time,
+                        is_private: values.is_private,
+                    },
+                    options_request: {
+                        option_texts: values.options,
+                    },
+                    roll_ranges_request: {
+                        roll_ranges: values.id_pairs.map((pair) => ([pair.start_id, pair.end_id]))
+                    }
                 }
             })
 
-            if (pollResponse.success && pollResponse?.data) {
-                await axios<{ message: string }>(`/api/v1/polls/${pollResponse.data.poll_id}/options`, {
-                    method: 'POST',
-                    headers: {
-                        Authorization: `Bearer ${access_token}`
-                    },
-                    data: {
-                        option_texts: values.options
-                    }
-                })
-
-                if (pollResponse.success && values.is_private) {
-                    await axios<{ message: string }>(`/api/v1/polls/${pollResponse.data.poll_id}/roll-ranges`, {
-                        method: 'POST',
-                        headers: {
-                            Authorization: `Bearer ${access_token}`
-                        },
-                        data: {
-                            roll_ranges: values.id_pairs.map((pair) => ([pair.start_id, pair.end_id]))
-                        }
-                    })
-                }
-
+            if (response.success) {
                 setIsSubmitted(true)
                 setTimeout(() => router.push('/polls/all'), 300)
                 toast({
                     title: "Success ✅",
                     description: "Poll is created successfully!",
                 })
+            } else {
+                throw new Error(response.message || 'Failed to create poll')
             }
-        } catch {
+        } catch (error) {
+            console.error(error)
             toast({
                 title: "Error ❌",
-                description: "Something went wrong!",
+                description: (error as Error).message,
             })
         } finally {
             setIsLoading(false)
