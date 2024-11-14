@@ -32,7 +32,7 @@ export default function MultiStepCreatePollForm() {
             description: 'Poll Description',
             start_time: new Date(),
             end_time: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            id_pairs: [{ start_id: 2104001, end_id: 2104132 }],
+            id_pairs: [],
             options: options,
             is_private: true,
         },
