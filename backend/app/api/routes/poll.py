@@ -278,6 +278,76 @@ def create_poll(request: PollCreate, user: CurrentUser, session: SessionDep):
     return PollCreateResponse(poll_id=poll.id)
 
 
+@router.post("/full-create", response_model=PollCreateResponse)
+def create_full_poll(
+    request: PollCreate,
+    options_request: PollOptionsCreate,
+    roll_ranges_request: RollRangesCreate,
+    user: CurrentUser,
+    session: SessionDep
+):
+    """Create a poll with options and roll ranges in a single transaction."""
+    try:
+        # Step 1: Create the Poll
+        poll = Poll(
+            title=request.title,
+            description=request.description,
+            is_private=request.is_private,
+            creator_email=user.email,
+            start_time=request.start_time,
+            end_time=request.end_time,
+        )
+        session.add(poll)
+        session.flush()  # Get poll ID before committing
+
+        # Step 2: Add Poll Options
+        option_texts = options_request.option_texts
+        if len(option_texts) < 2:
+            raise HTTPException(
+                status_code=400, detail="At least two options are required"
+            )
+        if len(option_texts) > 20:
+            raise HTTPException(
+                status_code=400, detail="A poll can have at most 20 options"
+            )
+        if len(option_texts) != len(set(option_texts)):
+            raise HTTPException(
+                status_code=400, detail="Options must be unique"
+            )
+
+        options = [PollOption(poll_id=poll.id, option_text=text)
+                   for text in option_texts]
+        session.add_all(options)
+
+        # Step 3: Add Roll Ranges
+        roll_ranges = roll_ranges_request.roll_ranges
+        if poll.is_private and len(roll_ranges) == 0:
+            raise HTTPException(
+                status_code=400, detail="At least one roll range is required"
+            )
+        unique_ranges = set((start, end) for start, end in roll_ranges)
+        if len(roll_ranges) != len(unique_ranges):
+            raise HTTPException(
+                status_code=400, detail="Roll ranges must be unique"
+            )
+
+        ranges = [RollRange(poll_id=poll.id, start=start, end=end)
+                  for start, end in roll_ranges]
+        session.add_all(ranges)
+
+        # Commit the transaction if all operations succeed
+        session.commit()
+
+        return PollCreateResponse(poll_id=poll.id, message="Poll created successfully")
+
+    except Exception as e:
+        # Rollback if any step fails
+        session.rollback()
+        raise HTTPException(
+            status_code=400, detail=f"Failed to create poll. {str(e)}"
+        )
+
+
 @ router.get("/{poll_id}", response_model=PollResponse)
 def get_poll(poll_id: UUID, user: CurrentUser, session: SessionDep):
     """Get a poll by its ID."""
@@ -401,11 +471,10 @@ def add_allowed_voters(poll_id: UUID, request: RollRangesCreate, user: CurrentUs
     if len(roll_ranges) == 0:
         raise HTTPException(
             status_code=400, detail="At least one roll range is required")
-    if len(roll_ranges) + len(poll.roll_ranges) > 20:
-        raise HTTPException(
-            status_code=400, detail="A poll can have at most 20 roll ranges")
-    if len(roll_ranges) + len(poll.roll_ranges) != len(set(roll_ranges + [(roll_range.start, roll_range.end)
-                                                                          for roll_range in poll.roll_ranges])):
+
+    unique_ranges = set(roll_ranges + [(roll_range.start, roll_range.end)
+                                       for roll_range in poll.roll_ranges])
+    if len(roll_ranges) + len(poll.roll_ranges) != len(unique_ranges):
         raise HTTPException(
             status_code=400, detail="Roll ranges must be unique")
 
