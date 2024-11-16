@@ -31,7 +31,7 @@ export default function PollsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [skip, setSkip] = useState(0)
-  const limit = parseInt(searchParams.get('limit') ?? '2')
+  const limit = parseInt(searchParams.get('limit') ?? '20')
 
 
   const getPolls = async (newSearchValue: string | null = null): Promise<PollType[] | undefined> => {
@@ -48,8 +48,8 @@ export default function PollsPage() {
     const url = `/api/v1/polls/${params.type !== 'all' ? params.type : ''}?${queryParams.toString()}`
 
     try {
-      setIsLoading(true)
-
+      setIsLoading(skip === 0)
+      setIsLoadingMore(true)
       const res = await axios<PollsResponseTypes>(url, {
         method: 'GET',
         headers: { 'Authorization': `Bearer ${access_token}` }

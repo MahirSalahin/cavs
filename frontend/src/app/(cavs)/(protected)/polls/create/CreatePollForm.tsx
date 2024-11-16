@@ -32,7 +32,7 @@ export default function MultiStepCreatePollForm() {
             description: 'Poll Description',
             start_time: new Date(),
             end_time: new Date(Date.now() + 24 * 60 * 60 * 1000),
-            id_pairs: [],
+            id_pairs: [{ start_id: 2104001, end_id: 2104132 }],
             options: options,
             is_private: true,
         },
@@ -62,7 +62,7 @@ export default function MultiStepCreatePollForm() {
                         option_texts: values.options,
                     },
                     roll_ranges_request: {
-                        roll_ranges: values.id_pairs.map((pair) => ([pair.start_id, pair.end_id]))
+                        roll_ranges: values.is_private ? values.id_pairs.map((pair) => ([pair.start_id, pair.end_id])) : []
                     }
                 }
             })
@@ -116,8 +116,16 @@ export default function MultiStepCreatePollForm() {
         }
     }
 
-    const prevStep = () => {
-        if (currentStep > 1) setCurrentStep(currentStep - 1)
+    const prevStep = async () => {
+        const isValid = await form.trigger(); // Validate current step
+        if (isValid) {
+            if (currentStep > 1) setCurrentStep(currentStep - 1)
+        } else {
+            toast({
+                title: "🚫 Validation Error",
+                description: "Please fill in all required fields before proceeding.",
+            });
+        }
     }
 
     return (
@@ -228,7 +236,7 @@ export default function MultiStepCreatePollForm() {
                                                         <FormItem>
                                                             <FormLabel>Start ID</FormLabel>
                                                             <FormControl>
-                                                                <Input {...field} disabled={isLoading} placeholder='Enter the start ID' type='number' />
+                                                                <Input {...field} disabled={isLoading} placeholder='2104001' type='number' />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
@@ -241,7 +249,7 @@ export default function MultiStepCreatePollForm() {
                                                         <FormItem>
                                                             <FormLabel>End ID</FormLabel>
                                                             <FormControl>
-                                                                <Input {...field} disabled={isLoading} placeholder='Enter the end ID' type='number' />
+                                                                <Input {...field} disabled={isLoading} placeholder='2104132' type='number' />
                                                             </FormControl>
                                                             <FormMessage />
                                                         </FormItem>
