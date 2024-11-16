@@ -31,15 +31,16 @@ export default function PollsPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
   const [skip, setSkip] = useState(0)
-  const limit = parseInt(searchParams.get('limit') ?? '20')
+  const limit = parseInt(searchParams.get('limit') ?? '2')
 
-  const fetchPolls = useCallback(async (isNewSearch = false) => {
+
+  const getPolls = async (newSearchValue: string | null = null): Promise<PollType[] | undefined> => {
     const pollType = Array.isArray(params?.type) ? params.type[0] : params?.type
     if (!pollType || !pollsFilterType.includes(pollType)) return notFound()
 
     const access_token = localStorage.getItem('access_token')
     const queryParams = new URLSearchParams({
-      search: searchValue,
+      search: newSearchValue ?? searchParams.get('search') ?? '',
       limit: limit.toString(),
       skip: skip.toString(),
     })
@@ -47,8 +48,7 @@ export default function PollsPage() {
     const url = `/api/v1/polls/${params.type !== 'all' ? params.type : ''}?${queryParams.toString()}`
 
     try {
-      setIsLoading(isNewSearch)
-      setIsLoadingMore(!isNewSearch)
+      setIsLoading(true)
 
       const res = await axios<PollsResponseTypes>(url, {
         method: 'GET',
@@ -57,25 +57,42 @@ export default function PollsPage() {
 
       if (res.success) {
         setTotalPoll(res.data.count)
-        setPolls(prevPolls => {
-          const newPolls = isNewSearch ? res.data.data : [...prevPolls, ...res.data.data]
-          return Array.from(new Set(newPolls.map(poll => poll.id)))
-            .map(id => newPolls.find(poll => poll.id === id)!)
-        })
+        // setPolls(prevPolls => {
+        //   const newPolls = isNewSearch ? res.data.data : [...prevPolls, ...res.data.data]
+        //   return Array.from(new Set(newPolls.map(poll => poll.id)))
+        //     .map(id => newPolls.find(poll => poll.id === id)!)
+        // })
+        return res.data.data
       }
+      return []
     } catch (error) {
       console.error('Error fetching polls:', error)
     } finally {
       setIsLoading(false)
-      setIsLoadingMore(false)
+      setIsLoadingMore(false);
     }
-  }, [params.type, searchValue, skip, limit])
+  }
 
-  const debouncedSearch = useDebounce((value: string) => {
+  const fetchPolls = useCallback(async (isNewSearch = false) => {
+    const newPolls = await getPolls()
+    if (newPolls) {
+      setPolls(prevPolls => {
+        if (isNewSearch) {
+          return newPolls
+        } else {
+          return [...prevPolls, ...newPolls]
+        }
+      })
+    }
+  }, [params.type, skip, limit])
+
+  const debouncedSearch = useDebounce(async (value: string) => {
     router.replace(`${pathname}?search=${value}`)
     setSkip(0)
-    fetchPolls(true)
-  }, 300)
+    setIsLoading(true)
+    const searchedPolls = await getPolls(value)
+    setPolls(searchedPolls ?? [])
+  }, 500)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.trimStart()
@@ -93,7 +110,8 @@ export default function PollsPage() {
   }, [limit])
 
   useEffect(() => {
-    getUser().then(setUser)
+    getUser()
+      .then(setUser)
   }, [])
 
   useEffect(() => {
@@ -117,7 +135,7 @@ export default function PollsPage() {
       <Filter />
 
       <div className="flex flex-col items-stretch justify-center gap-6 w-full mx-auto">
-        {polls.map((poll) => (
+        {!isLoading && polls.map((poll) => (
           <PollCard
             key={poll.id}
             poll={poll}
