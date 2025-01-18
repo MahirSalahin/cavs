@@ -14,8 +14,8 @@ export const CreatePollSchema = z.object({
             .refine((val) => !Number.isNaN(parseInt(val.toString(), 10)), 'Must be a valid number')
             .transform((val) => parseInt(val.toString(), 10))
             .refine((val) => val >= 1901001, 'Must be 1901001 or above'),
-    }).refine((data) => data.end_id > data.start_id, {
-        message: 'End ID must be greater than Start ID',
+    }).refine((data) => data.end_id >= data.start_id, {
+        message: 'End ID must be greater than or equal Start ID',
         path: ['end_id'], // Error reported on end_id
     })),
     options: z.array(z.string().trim().min(1, 'Option is too short')).min(2, 'At least 2 options are required'),
