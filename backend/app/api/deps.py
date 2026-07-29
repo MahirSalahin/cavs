@@ -27,9 +27,10 @@ TokenDep = Annotated[str, Depends(httpBearer)]
 
 def get_current_user(session: SessionDep, token: TokenDep):
     try:
+        signing_key = security.jwks_client.get_signing_key_from_jwt(token.credentials)
         payload = jwt.decode(
             token.credentials,
-            settings.SECRET_KEY,
+            signing_key.key,
             algorithms=[security.ALGORITHM],
             audience=settings.AUDIENCE,
         )

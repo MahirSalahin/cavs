@@ -15,7 +15,7 @@ psycopg2-binary = "^2.9.9"
 sqlmodel = "^0.0.22"
 python-dotenv = "^1.0.1"
 pydantic = {extras = ["email"], version = "^2.9.2"}
-pyjwt = "^2.9.0"
+pyjwt = {extras = ["crypto"], version = "^2.13.0"}
 
 
 [build-system]
