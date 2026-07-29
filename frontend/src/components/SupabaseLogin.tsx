@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { Button } from './ui/button'
-import { signInWithGoogle } from '@/lib/auth-actions'
+import { supabase } from '@/services/supabaseClient'
 import { FcGoogle } from "react-icons/fc"
 import { Card, CardContent, CardHeader, CardTitle } from './ui/card'
 import AnimatedText from './AnimatedText'
@@ -15,7 +15,33 @@ import { useSearchParams } from 'next/navigation'
 export default function SupabaseLogin() {
     const [acceptedTerms, setAcceptedTerms] = useState(false)
     const searchParams = useSearchParams()
-    console.log({callback: searchParams.get('callback')})
+
+    const handleGoogleLogin = async (e: React.FormEvent) => {
+        e.preventDefault()
+        const origin = typeof window !== 'undefined' ? window.location.origin : (process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://cavs.vercel.app')
+        const callback = searchParams.get('callback') ?? '/'
+        const redirectUrl = `${origin}/auth/callback`
+        
+        if (typeof window !== 'undefined') {
+            sessionStorage.setItem('auth_callback', callback)
+        }
+
+        const { data, error } = await supabase.auth.signInWithOAuth({
+            provider: 'google',
+            options: {
+                redirectTo: redirectUrl
+            }
+        })
+
+        if (error) {
+            console.error('Sign in error:', error)
+            return
+        }
+
+        if (data?.url) {
+            window.location.href = data.url
+        }
+    }
 
     return (
         <div className='p-4 z-10 max-w-[600px] w-full'>
@@ -26,9 +52,7 @@ export default function SupabaseLogin() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                     <form
-                        action={() => {
-                            signInWithGoogle(searchParams.get('callback') ?? '/');
-                        }}
+                        onSubmit={handleGoogleLogin}
                         className="space-y-4"
                     >
                         <div className="flex items-center space-x-2">

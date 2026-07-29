@@ -29,15 +29,13 @@ export async function signout() {
 }
 
 export async function signInWithGoogle(callback:string) {
-  const supabase = createClient();
+  const frontendUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'https://cavs.vercel.app';
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/auth/callback?callback=${callback}`,
+      redirectTo: `${frontendUrl}/auth/callback?callback=${callback}`,
     }
   });
-
-  console.log("OAuth URL:", data?.url);
 
   if (error) {
     console.log(error);

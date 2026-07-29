@@ -20,7 +20,8 @@ export default function AuthCallback() {
             
             // Extract query params (before #)
             const urlParams = new URLSearchParams(window.location.search);
-            const callbackUrl = urlParams.get('callback');
+            const savedCallback = typeof window !== 'undefined' ? sessionStorage.getItem('auth_callback') : null;
+            const callbackUrl = urlParams.get('callback') || savedCallback;
             
             // Extract hash params (after #)
             const hash = window.location.hash;
