@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import localFont from "next/font/local";
 import NextTopLoader from 'nextjs-toploader';
+import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
 import Particles from "@/components/ui/particles";
@@ -54,6 +55,7 @@ export default function RootLayout({
           color="#4646d7"
         />
         {children}
+        <Analytics />
         {/* </ThemeProvider> */}
       </body>
     </html>
