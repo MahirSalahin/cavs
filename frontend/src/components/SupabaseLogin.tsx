@@ -20,8 +20,8 @@ export default function SupabaseLogin() {
     return (
         <div className='p-4 z-10 max-w-[600px] w-full'>
             <Card className='!w-full'>
-                <CardHeader>
-                    <AnimatedText text='CAVS' className='md:text-[90px] md:leading-[90px] text-[50px] leading-[50px]' />
+                <CardHeader className="text-center">
+                    <AnimatedText text='CAVS' className='md:text-[90px] md:leading-[90px] text-[50px] leading-[50px] text-center block w-full' />
                     <CardTitle className='text-xl text-center'>Welcome, please join to continue</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">

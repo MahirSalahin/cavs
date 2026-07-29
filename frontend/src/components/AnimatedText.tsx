@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils"
 
 const AnimatedText = ({ text, className = '' }: { text: string, className?: string }) => {
     return (
-        <span className={cn('font-medium tracking-tight', className)}>
+        <span className={cn('font-medium tracking-tight text-center', className)}>
             {text.split('').map((char, index) => (
                 <span
                     key={index}
